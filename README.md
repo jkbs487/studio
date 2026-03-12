@@ -11,6 +11,9 @@
 
 ```
 studio/
+├── CLAUDE.md             # AI协作指南（给AI助手的上下文）
+├── README.md             # 项目说明（本文档）
+├── FAQ.md                # 常见问题和解决方案
 ├── experiments/          # 实验代码目录
 │   └── _template/        # 实验模板
 ├── languages/            # 语言特性研究（核心）
@@ -38,6 +41,19 @@ python languages/python/decorators/main.py
 
 ### 运行 C++ 实验
 
+**首次运行前，请确保已安装编译环境：**
+
+```bash
+# Linux (Ubuntu/Debian)
+sudo apt update
+sudo apt install build-essential cmake
+
+# 验证安装
+g++ --version && cmake --version
+```
+
+**构建和运行：**
+
 ```bash
 cd languages/cpp
 cmake -B build
@@ -47,7 +63,15 @@ cmake --build build
 
 详见各语言目录下的 `README.md`。
 
-### AI协作指南
+## 常见问题
+
+遇到问题？查看 [FAQ.md](./FAQ.md) 获取常见问题的解决方案，包括：
+- C++ 编译器配置问题
+- 智能指针编译错误
+- 构建系统问题
+- 代码调试技巧
+
+## AI协作指南
 
 本项目专为AI辅助开发设计。详见 [CLAUDE.md](./CLAUDE.md) 了解如何与AI助手高效协作。
 
