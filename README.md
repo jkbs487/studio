@@ -1,41 +1,51 @@
 # Studio - AI原生代码实验室
 
-一个用于研究编程语言特性和AI生成代码的实验室代码库。
+一个用于研究编程语言特性的实验室代码库。
 
 ## 项目目标
 
-- 🧪 **语言特性研究** - 探索各种编程语言的独特特性
-- 🤖 **AI生成代码研究** - 评估和优化AI代码生成的质量
-- 🔄 **AI原生设计** - 让AI助手能够高效理解和操作代码库
+- **语言特性研究** - 探索各种编程语言的独特特性
+- **AI原生设计** - 让AI助手能够高效理解和操作代码库
 
 ## 目录结构
 
 ```
 studio/
 ├── experiments/          # 实验代码目录
-│   ├── _template/        # 实验模板（新建实验时复制）
-│   └── .meta-schema.json # 实验元数据规范
-├── languages/            # 语言特性研究
-│   ├── typescript/
-│   ├── python/
-│   ├── rust/
-│   └── ...
-├── ai-generated/         # AI生成代码研究
-│   ├── prompts/          # 提示词模板库
-│   ├── outputs/          # AI生成输出
-│   └── evaluations/      # 生成效果评估
+│   └── _template/        # 实验模板
+├── languages/            # 语言特性研究（核心）
+│   ├── python/           # Python 实验
+│   │   ├── decorators/   # 装饰器
+│   │   ├── async/        # 异步编程
+│   │   ├── metaclass/    # 元类
+│   │   └── generators/   # 生成器
+│   └── cpp/              # C++ 实验
+│       ├── templates/    # 模板
+│       ├── smart-pointers/# 智能指针
+│       ├── lambda/       # Lambda 表达式
+│       └── move-semantics/# 移动语义
 ├── tools/                # 辅助工具脚本
 └── notes/                # 研究笔记
 ```
 
 ## 快速开始
 
-### 创建新实验
+### 运行 Python 实验
 
-1. 复制 `experiments/_template/` 目录
-2. 重命名为你的实验名称
-3. 填写实验元数据
-4. 开始实验
+```bash
+python languages/python/decorators/main.py
+```
+
+### 运行 C++ 实验
+
+```bash
+cd languages/cpp
+cmake -B build
+cmake --build build
+./build/lambda/lambda
+```
+
+详见各语言目录下的 `README.md`。
 
 ### AI协作指南
 
@@ -48,7 +58,6 @@ studio/
 | CLAUDE.md | 专门给AI助手的上下文指南 |
 | 元数据规范 | 记录每个实验的AI参与度、生成来源 |
 | 模块化设计 | 每个实验独立，便于AI理解和操作 |
-| 提示词库 | 可复用的AI交互模板 |
 
 ## 许可证
 

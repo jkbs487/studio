@@ -1,0 +1,10 @@
+{
+  "name": "cpp-lambda",
+  "description": "探索 C++ Lambda 表达式：语法、捕获列表、泛型 lambda、函数式编程模式",
+  "created": "2026-03-12",
+  "language": "cpp",
+  "tags": ["lambda", "functional-programming", "c++11", "modern-cpp"],
+  "ai_participation": "full",
+  "ai_model": "claude-3-sonnet",
+  "source": "ai"
+}
