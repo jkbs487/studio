@@ -14,6 +14,7 @@
 studio/
 ├── CLAUDE.md              # AI助手指南（本文档）
 ├── README.md              # 项目说明
+├── FAQ.md                 # 常见问题和解决方案
 ├── package.json           # 项目配置
 ├── experiments/           # 独立实验（通用）
 │   └── _template/         # 实验模板
@@ -465,3 +466,4 @@ make -j$(nproc)
 | `shared_from_this` 未定义 | 类未继承 `enable_shared_from_this` | 添加继承 `: public std::enable_shared_from_this<T>` |
 | 数组智能指针错误 | 缺少默认构造函数 | 使用 `vector<unique_ptr>` 替代 |
 
+**注意：** 更完整的常见问题和解决方案已迁移到 [FAQ.md](./FAQ.md)，包括详细的错误诊断、代码示例和调试技巧。
