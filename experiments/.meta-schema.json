@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Experiment Metadata",
+  "description": "实验元数据规范",
+  "type": "object",
+  "required": ["name", "description", "created", "language", "tags", "ai_participation", "source"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "实验名称",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "description": {
+      "type": "string",
+      "description": "简短描述",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "created": {
+      "type": "string",
+      "format": "date",
+      "description": "创建日期"
+    },
+    "updated": {
+      "type": "string",
+      "format": "date",
+      "description": "最后更新日期"
+    },
+    "language": {
+      "type": "string",
+      "description": "主要编程语言",
+      "enum": ["typescript", "javascript", "python", "rust", "go", "java", "cpp", "c", "other"]
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "标签列表"
+    },
+    "ai_participation": {
+      "type": "string",
+      "description": "AI参与程度",
+      "enum": ["full", "partial", "none"]
+    },
+    "ai_model": {
+      "type": "string",
+      "description": "使用的AI模型",
+      "enum": ["claude-3-opus", "claude-3-sonnet", "gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "gemini-pro", "other"]
+    },
+    "source": {
+      "type": "string",
+      "description": "代码来源",
+      "enum": ["human", "ai", "hybrid"]
+    },
+    "status": {
+      "type": "string",
+      "description": "实验状态",
+      "enum": ["draft", "in-progress", "completed", "archived"],
+      "default": "draft"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "参考链接"
+    },
+    "notes": {
+      "type": "string",
+      "description": "备注"
+    }
+  }
+}

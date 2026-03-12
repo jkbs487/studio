@@ -1,0 +1,22 @@
+{
+  "name": "studio",
+  "version": "1.0.0",
+  "description": "AI原生代码实验室 - 研究语言特性和AI生成代码",
+  "private": true,
+  "scripts": {
+    "new": "python tools/new_experiment.py",
+    "evaluate": "python tools/evaluate_code.py",
+    "sync": "python tools/sync_meta.py"
+  },
+  "keywords": [
+    "ai-native",
+    "code-lab",
+    "experiments",
+    "language-features"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "python": ">=3.8"
+  }
+}
