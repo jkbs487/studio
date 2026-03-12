@@ -13,44 +13,47 @@ private:
     std::string name;
     int* data;
     size_t size;
+    bool silent;  // 静默模式标志
 
 public:
     // 默认构造
-    BigData() : data(nullptr), size(0) {
-        std::cout << "[默认构造] " << name << std::endl;
+    BigData() : data(nullptr), size(0), silent(false) {
+        if (!silent) std::cout << "[默认构造] " << name << std::endl;
     }
 
     // 带参数构造
-    BigData(const std::string& n, size_t s) : name(n), size(s) {
+    BigData(const std::string& n, size_t s, bool silent_mode = false)
+        : name(n), size(s), silent(silent_mode) {
         data = new int[size];
         for (size_t i = 0; i < size; ++i) {
             data[i] = static_cast<int>(i);
         }
-        std::cout << "[构造] " << name << " (大小: " << size << ")" << std::endl;
+        if (!silent) std::cout << "[构造] " << name << " (大小: " << size << ")" << std::endl;
     }
 
     // 拷贝构造 - 深拷贝
     BigData(const BigData& other)
-        : name(other.name + " (拷贝)"), size(other.size) {
+        : name(other.name + " (拷贝)"), size(other.size), silent(other.silent) {
         data = new int[size];
         std::copy(other.data, other.data + size, data);
-        std::cout << "[拷贝构造] " << name << std::endl;
+        if (!silent) std::cout << "[拷贝构造] " << name << std::endl;
     }
 
     // 移动构造 - 转移资源
     BigData(BigData&& other) noexcept
         : name(std::move(other.name) + " (移动)"),
           data(other.data),
-          size(other.size) {
+          size(other.size),
+          silent(other.silent) {
         other.data = nullptr;
         other.size = 0;
         other.name.clear();
-        std::cout << "[移动构造] " << name << std::endl;
+        if (!silent) std::cout << "[移动构造] " << name << std::endl;
     }
 
     // 拷贝赋值
     BigData& operator=(const BigData& other) {
-        std::cout << "[拷贝赋值] " << other.name << std::endl;
+        if (!silent) std::cout << "[拷贝赋值] " << other.name << std::endl;
         if (this != &other) {
             delete[] data;
             name = other.name + " (赋值)";
@@ -63,7 +66,7 @@ public:
 
     // 移动赋值
     BigData& operator=(BigData&& other) noexcept {
-        std::cout << "[移动赋值] " << other.name << std::endl;
+        if (!silent) std::cout << "[移动赋值] " << other.name << std::endl;
         if (this != &other) {
             delete[] data;
             name = std::move(other.name) + " (移动赋值)";
@@ -79,7 +82,7 @@ public:
     // 析构
     ~BigData() {
         delete[] data;
-        if (!name.empty()) {
+        if (!silent && !name.empty()) {
             std::cout << "[析构] " << name << std::endl;
         }
     }
@@ -277,42 +280,45 @@ void demo_container_move() {
 void demo_performance() {
     std::cout << "\n--- 7. 性能对比 ---\n" << std::endl;
 
-    const size_t count = 10000;
+    const size_t count = 5000;
+    const size_t data_size = 10000;  // 40 KB per object
+    const bool silent_mode = true;
 
-    // 测试拷贝
+    std::cout << "测试配置: " << count << " 次循环, 数据大小: " << data_size << " 个 int (约 " << data_size * sizeof(int) / 1024 << " KB)" << std::endl;
+
+    // 方案 1: 拷贝 - vector扩容时的拷贝开销
+    std::cout << "\n测试1: vector 扩容时的拷贝 vs 移动" << std::endl;
+
+    // 拷贝测试 - vector扩容时会拷贝所有元素
     auto start_copy = std::chrono::high_resolution_clock::now();
     {
         std::vector<BigData> vec_copy;
-        vec_copy.reserve(count);
-        BigData temp("Copy-Test", 100);
         for (size_t i = 0; i < count; ++i) {
-            BigData data = temp;  // 拷贝
-            // data 立即销毁，只是为了测试性能
+            vec_copy.push_back(BigData("Data", data_size, silent_mode));  // 可能触发拷贝（扩容时）
         }
     }
     auto end_copy = std::chrono::high_resolution_clock::now();
     auto copy_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_copy - start_copy);
 
-    // 测试移动
+    // 移动测试 - 使用 reserve 和 move 避免拷贝
     auto start_move = std::chrono::high_resolution_clock::now();
     {
         std::vector<BigData> vec_move;
-        vec_move.reserve(count);
+        vec_move.reserve(count);  // 预分配空间
         for (size_t i = 0; i < count; ++i) {
-            BigData data("Move-Test", 100);
-            BigData moved = std::move(data);  // 移动
+            vec_move.push_back(BigData("Data", data_size, silent_mode));  // 移动，无拷贝
         }
     }
     auto end_move = std::chrono::high_resolution_clock::now();
     auto move_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_move - start_move);
 
-    std::cout << "拷贝 " << count << " 次耗时: " << copy_duration.count() << " ms" << std::endl;
-    std::cout << "移动 " << count << " 次耗时: " << move_duration.count() << " ms" << std::endl;
-    std::cout << "性能提升: "
-              << (copy_duration.count() > 0
-                      ? static_cast<double>(copy_duration.count()) / move_duration.count()
-                      : 1)
-              << "x" << std::endl;
+    std::cout << "\n结果对比:" << std::endl;
+    std::cout << "  拷贝 (vector扩容): " << copy_duration.count() << " ms" << std::endl;
+    std::cout << "  移动 (预分配+move): " << move_duration.count() << " ms" << std::endl;
+    if (move_duration.count() > 0) {
+        std::cout << "  性能提升: " << static_cast<double>(copy_duration.count()) / move_duration.count() << "x" << std::endl;
+        std::cout << "  时间节省: " << (copy_duration.count() - move_duration.count()) << " ms" << std::endl;
+    }
 }
 
 // ============================================

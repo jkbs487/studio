@@ -267,6 +267,75 @@ T process(T value) {
 }
 ```
 
+### 性能测试常见错误
+
+**问题：** 性能测试结果显示不符合预期（如拷贝比移动快）
+
+**常见原因：**
+
+1. **测试条件不公平**
+   - 不同测试包含不同数量的构造函数调用
+   - 一个测试循环10000次，另一个只循环1次
+
+2. **隐藏的额外开销**
+   - 测试包含了非目标操作的时间（如对象创建）
+   - 没有排除I/O输出时间
+
+3. **测试方法不当**
+   - 测试人造场景而非真实使用场景
+   - 循环次数太少或数据量太小
+
+**正确做法：**
+
+```cpp
+// ❌ 错误示例 - 测试不公平
+void bad_test() {
+    BigData temp("Test", 100);  // 只创建1次
+    for (int i = 0; i < 10000; ++i) {
+        BigData copy = temp;  // 10000次拷贝
+    }
+
+    for (int i = 0; i < 10000; ++i) {
+        BigData data("Test", 100);  // 10000次构造！
+        BigData moved = std::move(data);
+    }
+    // 结果：拷贝更快，因为少调用了9999次构造函数
+}
+
+// ✅ 正确示例 - 测试真实场景
+void good_test() {
+    // 测试1: vector扩容时的拷贝开销
+    auto start = std::chrono::high_resolution_clock::now();
+    {
+        std::vector<BigData> vec;
+        for (int i = 0; i < 10000; ++i) {
+            vec.push_back(BigData("Data", 10000));  // 扩容时触发拷贝
+        }
+    }
+    auto copy_time = std::chrono::high_resolution_clock::now() - start;
+
+    // 测试2: 预分配+移动
+    start = std::chrono::high_resolution_clock::now();
+    {
+        std::vector<BigData> vec;
+        vec.reserve(10000);  // 预分配避免扩容
+        for (int i = 0; i < 10000; ++i) {
+            vec.push_back(BigData("Data", 10000));  // 移动，无拷贝
+        }
+    }
+    auto move_time = std::chrono::high_resolution_clock::now() - start;
+    // 结果：移动更快，符合预期
+}
+```
+
+**最佳实践：**
+- ✅ 只对比要测量的操作，确保测试条件公平
+- ✅ 测试真实使用场景（如vector操作）
+- ✅ 使用静默模式减少输出干扰
+- ✅ 循环次数和数据量足够大以体现差异
+- ✅ 多次运行取平均值
+- ✅ 测量前热身，避免冷启动影响
+
 ---
 
 ## 寻求帮助
