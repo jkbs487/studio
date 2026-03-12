@@ -406,14 +406,6 @@ vec.push_back(std::move(obj));   // 移动（obj 不再使用）
 - 不要用 emplace_back 替代 `push_back(已有对象)` 的拷贝
 
 ---
-auto construct_time = std::chrono::high_resolution_clock::now() - start;
-
-std::cout << "拷贝构造 (std::copy): " << copy_time << " ms" << std::endl;
-std::cout << "带参数构造 (for循环): " << construct_time << " ms" << std::endl;
-// 结果：拷贝快 2x，因为 memcpy 比 for 循环高效
-```
-
----
 
 ## 寻求帮助
 
