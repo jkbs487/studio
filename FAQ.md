@@ -358,246 +358,54 @@ void good_test() {
    - `for` 循环逐个初始化，逐个操作，效率低
    - 拷贝不总是比构造慢，取决于初始化方式
 
-**实际测试结果分析：**
+**实际测试结果：**
 
-```cpp
-// 测试 1: 拷贝 vs 移动构造（大对象）
-// 结果：19.0x 提升 ✅
-// 原因：移动只复制指针，拷贝需要深拷贝 39KB 数据
+| 测试 | 结果 | 原因 |
+|------|------|------|
+| 拷贝 vs 移动 | 19x 提升 ✅ | 移动只复制指针，拷贝需要深拷贝 |
+| 传值 vs 传引用 | 极大提升 ✅ | 避免大对象的拷贝 |
+| vector 扩容 | 效果有限 ⚠️ | 移动扩容本身很快 |
+| emplace_back | 1.2x 提升 ✅ | 避免临时对象的创建 |
+| std::swap | 1.7x 提升 ⚠️ | 避免深拷贝但仍有开销 |
+| 字符串拼接 | 无提升 ⚠️ | 编译器已优化 |
 
-// 测试 2: 传值 vs 传引用（大字符串）
-// 结果：9ms vs 0ms ✅
-// 原因：传值每次拷贝 10KB，传引用只传指针
+**重要发现：**
 
-// 测试 3: vector 扩容 vs 预分配
-// 结果：0.9x（不稳定）⚠️
-// 原因：移动扩容本身已经很快（只复制指针），预分配优势有限
-
-// 测试 4: push_back vs emplace_back（正确对比）
-// 结果：1.2x 提升 ✅
-// 原因：emplace_back 避免临时对象的构造和移动
-//      push_back(BigData(...)): 临时对象构造 + 移动构造
-//      emplace_back(...): 直接在容器中构造
-
-// 测试 4.5: 拷贝构造 vs 带参数构造（说明为什么构造可能比拷贝慢）
-// 结果：拷贝快 2.0x（3ms vs 6ms）⚠️
-// 原因：拷贝构造使用 std::copy (memcpy，批量操作)
-//      带参数构造使用 for 循环逐个初始化（逐个操作）
-
-// 测试 5: 手动 swap vs std::swap
-// 结果：1.7x 提升 ⚠️
-// 原因：移动虽然快（只复制指针），但仍有构造/析构开销
-//      重要的是避免深拷贝带来的额外内存分配
-
-
-// 测试 6: 字符串拼接（大字符串）
-// 结果：1.0x（无提升）⚠️
-// 原因：编译器优化了字符串拼接表达式
-//      operator+ 已经足够高效，手动 std::move 无额外收益
-```
-
-**改进建议：**
-
-不要删除效果不明显的测试，而是：
-
-1. **添加详细说明**
-   ```cpp
-   std::cout << "注意: 提升不明显是因为编译器可能优化了字符串拼接表达式。" << std::endl;
-   std::cout << "      std::string 的 operator+ 已经进行了优化，手动 std::move 可能无法带来额外收益。" << std::endl;
-   std::cout << "      移动字符串在以下场景更有优势：赋值、函数返回、容器操作等。" << std::endl;
-   ```
-
-2. **说明测试局限性**
-   ```cpp
-   std::cout << "关键洞察:" << std::endl;
-   std::cout << "- 移动语义在以下场景最有价值：对象移动、函数返回、容器操作" << std::endl;
-   std::cout << "- 编译器优化（RVO、SSO、字符串优化）可能掩盖移动语义的效果" << std::endl;
-   std::cout << "- 设计性能测试时需要考虑编译器优化和测试方法的公平性" << std::endl;
-   ```
-
-3. **提供真实使用场景的示例**
-   - 对象移动：`std::move(vec1)` 移动整个容器
-   - 函数返回：`return std::move(obj)` 避免拷贝（虽然 RVO 也会处理）
-   - 容器操作：`vec.emplace_back(args)` 直接构造，避免临时对象
-
-**移动语义最有价值的场景：**
-
-```cpp
-// 1. 容器移动 - O(1) 时间
-std::vector<int> vec1 = {1, 2, 3, 4, 5};
-std::vector<int> vec2 = std::move(vec1);  // 转移所有权，无拷贝
-
-// 2. 字符串移动 - 避免动态内存拷贝
-std::string str1 = "Hello";
-std::string str2 = std::move(str1);  // str1 变空，str2 获得数据
-
-// 3. 函数参数传递 - 避免不必要的拷贝
-void process(std::string str) { /* ... */ }
-std::string data = "...";
-process(std::move(data));  // 移动而非拷贝
-
-// 4. 容器插入 - 避免临时对象的构造
-std::vector<BigData> vec;
-vec.emplace_back(args...);  // 直接构造，无临时对象
-```
+- **emplace_back 测试问题**：最初对比 `push_back(已有对象拷贝)` vs `emplace_back(构造)`，结果显示拷贝更快
+- **原因**：拷贝构造使用 `std::copy` (memcpy，批量操作)，带参数构造使用 `for` 循环逐个初始化
+- **正确对比**：`push_back(临时对象)` vs `emplace_back`，结果显示 emplace_back 稍快（1.2x）
+- **核心结论**：拷贝不总是慢，取决于初始化方式；emplace_back 的优势是避免临时对象
 
 **结论：**
-
-- ✅ 移动语义对于大对象（>1KB）效果显著
+- ✅ 移动语义对大对象（>1KB）效果显著
 - ✅ 传递大对象参数时，优先使用 const& 引用
-- ⚠️ 编译器优化可能掩盖移动语义的优势
-- ⚠️ 某些场景下移动语义提升有限，但这不代表它没有价值
-- 📝 设计性能测试时，要考虑编译器优化，并诚实地呈现测试结果
-- 📝 当测试效果不明显时，添加详细说明，而不是删除测试
+- ⚠️ 编译器优化可能掩盖移动语义优势
+- ⚠️ 设计性能测试时，要对比相同语义的操作
+- 📌 拷贝构造 (std::copy) 可能比带参数构造 (for循环) 快
+- 📌 emplace_back 应该对比 `push_back(临时对象)`，而非 `push_back(已有对象)`
 
-### emplace_back 性能测试的正确方法
-
-**问题：** emplace_back 测试结果显示比拷贝还慢，为什么？
-
-**错误示例：**
+### emplace_back 使用建议
 
 ```cpp
-// ❌ 错误：对比了不同的操作
-BigData source_obj("Source", 1000);
-
-// 测试1: 拷贝已有对象
-vec.push_back(source_obj);  // 拷贝构造
-
-// 测试2: 从参数构造新对象
-vec.emplace_back("Data", 1000);  // 带参数构造
-
-// 结果：拷贝反而快！
-// 原因：拷贝构造使用 std::copy (memcpy)，很快
-//       带参数构造使用 for 循环初始化，较慢
-```
-
-**为什么会这样？**
-
-关键在于初始化方式的差异：
-
-```cpp
-// 拷贝构造函数
-BigData(const BigData& other) {
-    data = new int[size];
-    std::copy(other.data, other.data + size, data);  // ✅ memcpy，批量操作
-}
-
-// 带参数构造函数
-BigData(const std::string& n, size_t s) {
-    data = new int[size];
-    for (size_t i = 0; i < size; ++i) {
-        data[i] = static_cast<int>(i);  // ❌ 逐个赋值，效率低
-    }
-}
-```
-
-**实际性能对比：**
-
-```
-拷贝构造 (std::copy):  3 ms   // memcpy，批量操作
-带参数构造 (for循环):   6 ms   // 逐个初始化，慢 2x
-```
-
-**正确的对比方法：**
-
-```cpp
-// ✅ 正确：对比相同的语义
-// 都是从参数构造对象，只是一个创建临时对象，一个直接构造
-
-// 方法1: push_back(临时对象)
-vec.push_back(BigData("Data", 1000));  // 构造临时对象 + 移动构造
-
-// 方法2: emplace_back
-vec.emplace_back("Data", 1000);  // 直接在容器中构造
-
-// 结果：emplace_back 稍快（1.2x）
-// 原因：避免了临时对象的创建和移动
-```
-
-**性能分析：**
-
-```
-push_back(BigData(...)):
-  1. 构造临时对象（for循环初始化）
-  2. 移动构造（复制指针）
-  3. 析构临时对象
-
-emplace_back(...):
-  1. 直接构造（for循环初始化）
-
-差异：省略了移动构造和析构步骤
-```
-
-**emplace_back 的真正优势：**
-
-1. **避免临时对象**：直接在容器中构造，省略临时对象的创建和销毁
-2. **减少内存分配**：对于大对象，避免额外的内存分配和释放
-3. **适合复杂对象**：对于构造开销大的对象，优势更明显
-
-**使用建议：**
-
-```cpp
-// ✅ 推荐：总是使用 emplace_back
-vec.emplace_back("Name", 1000);  // 直接构造
+// ✅ 推荐：直接构造
+vec.emplace_back("Name", 1000);
 
 // ❌ 避免：创建临时对象
-vec.push_back(BigData("Name", 1000));  // 临时对象 + 移动
+vec.push_back(BigData("Name", 1000));
 
-// ✅ 如果对象已存在，使用拷贝/移动
+// ✅ 对象已存在，使用拷贝/移动
 BigData obj("Name", 1000);
-vec.push_back(obj);           // 拷贝（如果 obj 还要使用）
-vec.push_back(std::move(obj)); // 移动（如果 obj 不再使用）
+vec.push_back(obj);              // 拷贝（obj 还要使用）
+vec.push_back(std::move(obj));   // 移动（obj 不再使用）
 ```
 
-**关键结论：**
+**关键点：**
+- emplace_back 避免临时对象的创建和销毁
+- 对于构造开销大的对象，emplace_back 优势明显
+- 对于构造开销小的对象，emplace_back 和 push_back 差异不大
+- 不要用 emplace_back 替代 `push_back(已有对象)` 的拷贝
 
-- 📌 emplace_back 应该对比 `push_back(临时对象)`，而不是 `push_back(已有对象)`
-- 📌 拷贝不总是慢：`std::copy` (memcpy) 可能比 `for` 循环初始化快
-- 📌 构造开销大的对象，emplace_back 优势明显
-- 📌 构造开销小的对象，emplace_back 和 push_back 差异不大
-- 📌 设计性能测试时，要对比**相同语义**的操作，避免混淆
-
-**完整测试示例：**
-
-```cpp
-// 测试 4: push_back vs emplace_back（正确对比）
-std::cout << "【测试 4】push_back vs emplace_back" << std::endl;
-
-// push_back(临时对象): 构造临时对象 + 移动
-auto start = std::chrono::high_resolution_clock::now();
-for (int i = 0; i < 100000; ++i) {
-    vec.push_back(BigData("Data", 1000));  // 临时对象 + 移动
-}
-auto push_time = std::chrono::high_resolution_clock::now() - start;
-
-// emplace_back: 直接构造
-start = std::chrono::high_resolution_clock::now();
-for (int i = 0; i < 100000; ++i) {
-    vec.emplace_back("Data", 1000);  // 直接构造
-}
-auto emplace_time = std::chrono::high_resolution_clock::now() - start;
-
-std::cout << "push_back(临时对象): " << push_time << " ms" << std::endl;
-std::cout << "emplace_back: " << emplace_time << " ms" << std::endl;
-// 结果：emplace_back 稍快
-
-// 测试 4.5: 拷贝 vs 构造（说明原因）
-std::cout << "【测试 4.5】拷贝构造 vs 带参数构造" << std::endl;
-
-BigData source("Source", 1000);
-
-// 拷贝构造
-start = std::chrono::high_resolution_clock::now();
-for (int i = 0; i < 10000; ++i) {
-    vec.push_back(source);  // std::copy (memcpy)
-}
-auto copy_time = std::chrono::high_resolution_clock::now() - start;
-
-// 带参数构造
-start = std::chrono::high_resolution_clock::now();
-for (int i = 0; i < 10000; ++i) {
-    vec.emplace_back("Data", 1000);  // for 循环初始化
-}
+---
 auto construct_time = std::chrono::high_resolution_clock::now() - start;
 
 std::cout << "拷贝构造 (std::copy): " << copy_time << " ms" << std::endl;
