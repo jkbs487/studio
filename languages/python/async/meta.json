@@ -1,0 +1,10 @@
+{
+  "name": "python-async",
+  "description": "探索 Python 异步编程：async/await、asyncio、协程、异步上下文管理器、异步生成器",
+  "created": "2026-03-12",
+  "language": "python",
+  "tags": ["async", "asyncio", "coroutine", "concurrent"],
+  "ai_participation": "full",
+  "ai_model": "claude-3-sonnet",
+  "source": "ai"
+}
