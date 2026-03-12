@@ -71,8 +71,13 @@ void demo_unique_ptr() {
         new Resource("Resource-3", 300), custom_deleter);
 
     // unique_ptr 与数组
-    std::unique_ptr<Resource[]> arr = std::make_unique<Resource[]>(3);
-    std::cout << "创建动态数组" << std::endl;
+    // 注意: make_unique<Resource[]>要求Resource有默认构造函数
+    // 这里使用vector作为替代方案
+    std::vector<std::unique_ptr<Resource>> arr;
+    arr.push_back(std::make_unique<Resource>("Array-1", 101));
+    arr.push_back(std::make_unique<Resource>("Array-2", 102));
+    arr.push_back(std::make_unique<Resource>("Array-3", 103));
+    std::cout << "创建动态数组 (使用vector<unique_ptr>): " << arr.size() << " 个元素" << std::endl;
 }
 
 // ============================================
@@ -142,7 +147,7 @@ void demo_weak_ptr() {
 // 4. 循环引用问题
 // ============================================
 
-class Node {
+class Node : public std::enable_shared_from_this<Node> {
 private:
     std::string name;
     std::shared_ptr<Node> next;  // 使用 shared_ptr 会导致循环引用

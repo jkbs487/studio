@@ -300,8 +300,168 @@ languages/cpp/
 ### 最佳实践总结
 
 1. **从简到繁**：先创建基础文件，再优化
-2. **跨优先考虑**：Windows 用户多，文档要覆盖
+2. **跨平台考虑**：Windows 用户多，文档要覆盖
 3. **构建系统**：CMake 统一管理，避免平台特定脚本
 4. **文档层次**：总览 → 实验 → 详细说明
 5. **迭代改进**：根据用户反馈持续优化
+
+## 实践案例：编译执行 C++ 实验并修复编译错误
+
+### 案例背景
+
+用户在 Linux 系统上首次尝试编译 C++ 实验项目，遇到编译器缺失和代码编译错误，需要 AI 协助解决问题并验证实验可执行性。
+
+### 问题诊断
+
+**初始错误：**
+```
+cmake ..
+-- The CXX compiler identification is unknown
+CMake Error at CMakeLists.txt:2 (project):
+  No CMAKE_CXX_COMPILER could be found.
+```
+
+**分析：**
+- 系统未安装 C++ 编译器
+- CMake 无法检测到可用的编译器
+
+### 解决步骤
+
+**1. 环境准备**
+```bash
+# 安装编译工具链
+sudo apt update
+sudo apt install -y build-essential cmake
+
+# 验证安装
+g++ --version  # g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+cmake --version  # cmake version 3.28.3
+```
+
+**2. 清理重建**
+```bash
+cd languages/cpp
+rm -rf build
+mkdir build
+cd build
+cmake ..
+```
+
+输出：
+```
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Configuring done (1.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/.../build
+```
+
+**3. 编译发现错误**
+
+执行 `make -j$(nproc)` 时发现 smart-pointers 编译失败：
+
+```
+error: 'shared_from_this' was not declared in this scope
+  163 |             n->parent = shared_from_this();
+
+error: no matching function for call to 'Resource::Resource()'
+ 1085 |     { return unique_ptr<_Tp>(new remove_extent_t<_Tp>[__num]()); }
+```
+
+**4. 修复编译错误**
+
+**错误 1：`shared_from_this()` 未定义**
+
+问题：`Node` 类使用 `shared_from_this()` 但未继承 `std::enable_shared_from_this`
+
+修复（smart-pointers/main.cpp:145）：
+```cpp
+// 修改前
+class Node {
+private:
+    std::string name;
+    std::shared_ptr<Node> next;
+    std::weak_ptr<Node> parent;
+
+// 修改后
+class Node : public std::enable_shared_from_this<Node> {
+private:
+    std::string name;
+    std::shared_ptr<Node> next;
+    std::weak_ptr<Node> parent;
+```
+
+**错误 2：`make_unique<Resource[]>` 无默认构造函数**
+
+问题：`Resource` 类没有默认构造函数，但 `make_unique<Resource[]>(3)` 需要默认构造
+
+修复（smart-pointers/main.cpp:73-75）：
+```cpp
+// 修改前
+std::unique_ptr<Resource[]> arr = std::make_unique<Resource[]>(3);
+std::cout << "创建动态数组" << std::endl;
+
+// 修改后
+std::vector<std::unique_ptr<Resource>> arr;
+arr.push_back(std::make_unique<Resource>("Array-1", 101));
+arr.push_back(std::make_unique<Resource>("Array-2", 102));
+arr.push_back(std::make_unique<Resource>("Array-3", 103));
+std::cout << "创建动态数组 (使用vector<unique_ptr>): " << arr.size() << " 个元素" << std::endl;
+```
+
+**5. 重新编译**
+```bash
+make -j$(nproc)
+```
+
+输出：
+```
+[ 62%] Building CXX object smart-pointers/CMakeFiles/smart-pointers.dir/main.cpp.o
+[100%] Linking CXX executable smart-pointers
+[100%] Built target smart-pointers
+```
+
+**6. 执行验证**
+
+成功运行所有 4 个实验程序：
+
+```bash
+./templates/templates       # C++ 模板实验
+./smart-pointers/smart-pointers  # 智能指针实验
+./lambda/lambda            # Lambda 表达式实验
+./move-semantics/move-semantics  # 移动语义实验
+```
+
+所有实验均正常输出，验证了代码正确性。
+
+### 关键经验
+
+**编译环境检查：**
+- 首次在系统上编译 C++ 时，先检查编译器是否安装
+- Ubuntu/Debian：`build-essential` 包含完整工具链
+- 验证命令：`g++ --version` 和 `cmake --version`
+
+**编译错误处理：**
+1. 仔细阅读错误信息，定位问题根源
+2. `shared_from_this()` 必须与 `std::enable_shared_from_this` 配合使用
+3. `make_unique<T[]>()` 要求 T 有默认构造函数，考虑替代方案
+
+**C++ 最佳实践：**
+- 使用 `vector<unique_ptr>` 替代 `unique_ptr<T[]>` 更灵活
+- 类需要 `shared_from_this()` 时，必须继承 `enable_shared_from_this`
+- 智能指针的循环引用使用 `weak_ptr` 解决
+
+**测试验证：**
+- 编译成功后立即运行程序验证功能
+- 检查输出是否符合预期
+- 确保资源正确释放（析构函数调用）
+
+### 错误模式总结
+
+| 错误类型 | 常见原因 | 解决方案 |
+|---------|---------|---------|
+| 编译器未找到 | 系统未安装编译工具 | 安装 build-essential (Linux) / VS Build Tools (Windows) |
+| `shared_from_this` 未定义 | 类未继承 `enable_shared_from_this` | 添加继承 `: public std::enable_shared_from_this<T>` |
+| 数组智能指针错误 | 缺少默认构造函数 | 使用 `vector<unique_ptr>` 替代 |
 
