@@ -420,48 +420,101 @@ void demo_performance() {
     // ============================================
     // 测试 4: emplace_back 优势
     // ============================================
-    std::cout << "\n【测试 4】拷贝 vs emplace_back" << std::endl;
+    std::cout << "\n【测试 4】push_back vs emplace_back" << std::endl;
 
     const size_t emplace_count = 100000;
     const size_t emplace_size = 1000;  // 4 KB per object
     std::cout << "配置: " << emplace_count << " 次操作，每个对象约 " << emplace_size * sizeof(int) / 1024 << " KB\n" << std::endl;
-    std::cout << "说明: emplace_back 直接构造，避免临时对象的构造+移动\n" << std::endl;
+    std::cout << "说明: 对比临时对象的构造+移动 vs 直接构造\n" << std::endl;
 
-    // 准备源对象用于拷贝测试
-    BigData source_obj("Source", emplace_size, silent);
-
-    // 拷贝构造
+    // push_back(临时对象): 构造临时对象 + 移动构造
     auto start_emplace = std::chrono::high_resolution_clock::now();
     {
         std::vector<BigData> vec;
         vec.reserve(emplace_count);
         for (size_t i = 0; i < emplace_count; ++i) {
-            vec.push_back(source_obj);  // 拷贝
+            vec.push_back(BigData("Data", emplace_size, silent));  // 构造临时对象，然后移动
         }
     }
     auto end_emplace = std::chrono::high_resolution_clock::now();
-    long long copy_construct_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_emplace - start_emplace).count();
+    long long push_back_temp_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_emplace - start_emplace).count();
 
-    // emplace_back
+    // emplace_back: 直接在容器中构造
     start_emplace = std::chrono::high_resolution_clock::now();
     {
         std::vector<BigData> vec;
         vec.reserve(emplace_count);
         for (size_t i = 0; i < emplace_count; ++i) {
-            vec.emplace_back("Data", emplace_size, silent);  // 原地构造
+            vec.emplace_back("Data", emplace_size, silent);  // 直接在容器中构造
         }
     }
     end_emplace = std::chrono::high_resolution_clock::now();
     long long emplace_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_emplace - start_emplace).count();
 
     std::cout << "结果:" << std::endl;
-    std::cout << "  拷贝构造: " << copy_construct_time << " ms" << std::endl;
+    std::cout << "  push_back(临时对象): " << push_back_temp_time << " ms" << std::endl;
     std::cout << "  emplace_back: " << emplace_time << " ms" << std::endl;
     if (emplace_time > 0) {
-        double ratio = static_cast<double>(copy_construct_time) / emplace_time;
+        double ratio = static_cast<double>(push_back_temp_time) / emplace_time;
         std::cout << "  性能提升: " << std::fixed << std::setprecision(1) << ratio << "x" << std::endl;
-        std::cout << "\n注意: 由于 push_back 也有移动优化版本，在此场景下两者差异不明显。" << std::endl;
-        std::cout << "      emplace_back 的真正优势在于可以直接构造复杂对象，避免临时对象的创建。" << std::endl;
+        std::cout << "\n原理:" << std::endl;
+        std::cout << "  push_back(BigData(...)): 临时对象构造 + 移动构造 (2次构造)" << std::endl;
+        std::cout << "  emplace_back(...):         直接在容器中构造 (1次构造)" << std::endl;
+        std::cout << "\n注意: 在此测试中，由于移动构造很快（只复制指针），" << std::endl;
+        std::cout << "      emplace_back 的优势可能不明显。" << std::endl;
+        std::cout << "      对于构造开销大的复杂对象，emplace_back 优势更明显。" << std::endl;
+    }
+
+    // ============================================
+    // 测试 4.5: 拷贝 vs 构造（说明测试4结果的原因）
+    // ============================================
+    std::cout << "\n【测试 4.5】拷贝构造 vs 带参数构造（说明为什么构造比拷贝慢）" << std::endl;
+
+    const size_t compare_count = 10000;
+    std::cout << "配置: " << compare_count << " 次操作，每个对象约 " << emplace_size * sizeof(int) / 1024 << " KB\n" << std::endl;
+    std::cout << "说明: 演示为什么上面的 emplace_back 没有比 push_back 快\n" << std::endl;
+
+    // 准备源对象用于拷贝测试
+    BigData source_obj("Source", emplace_size, silent);
+
+    // 拷贝构造: std::copy (高效)
+    auto start_compare = std::chrono::high_resolution_clock::now();
+    {
+        std::vector<BigData> vec;
+        vec.reserve(compare_count);
+        for (size_t i = 0; i < compare_count; ++i) {
+            vec.push_back(source_obj);  // 拷贝构造: std::copy (memcpy)
+        }
+    }
+    auto end_compare = std::chrono::high_resolution_clock::now();
+    long long copy_construct_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_compare - start_compare).count();
+
+    // 带参数构造: for 循环初始化 (低效)
+    start_compare = std::chrono::high_resolution_clock::now();
+    {
+        std::vector<BigData> vec;
+        vec.reserve(compare_count);
+        for (size_t i = 0; i < compare_count; ++i) {
+            vec.emplace_back("Data", emplace_size, silent);  // 带参数构造: for 循环初始化
+        }
+    }
+    end_compare = std::chrono::high_resolution_clock::now();
+    long long param_construct_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_compare - start_compare).count();
+
+    std::cout << "结果:" << std::endl;
+    std::cout << "  拷贝构造 (std::copy): " << copy_construct_time << " ms" << std::endl;
+    std::cout << "  带参数构造 (for循环): " << param_construct_time << " ms" << std::endl;
+    if (param_construct_time > 0) {
+        double ratio = static_cast<double>(param_construct_time) / copy_construct_time;
+        std::cout << "  拷贝反而快: " << std::fixed << std::setprecision(1) << ratio << "x" << std::endl;
+        std::cout << "\n原因分析:" << std::endl;
+        std::cout << "  1. 拷贝构造使用 std::copy，内部可能使用 memcpy (批量拷贝，高效)" << std::endl;
+        std::cout << "  2. 带参数构造使用 for 循环逐个赋值 (逐个操作，低效)" << std::endl;
+        std::cout << "  3. 这解释了为什么构造比拷贝慢" << std::endl;
+        std::cout << "\n结论:" << std::endl;
+        std::cout << "  - emplace_back 的优势是避免临时对象，不是替代拷贝" << std::endl;
+        std::cout << "  - 如果必须构造对象，emplace_back 比 push_back(临时对象) 稍快" << std::endl;
+        std::cout << "  - 如果对象已存在，拷贝可能比构造更快（取决于初始化方式）" << std::endl;
     }
 
     // ============================================
@@ -563,16 +616,24 @@ void demo_performance() {
     std::cout << "\n========================================" << std::endl;
     std::cout << "性能测试结论" << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "1. ✅ 移动语义对于大对象（>1KB）效果显著（18.1x）" << std::endl;
+    std::cout << "1. ✅ 移动语义对于大对象（>1KB）效果显著（19x）" << std::endl;
     std::cout << "2. ✅ 传递大对象参数时，优先使用 const& 引用（避免拷贝）" << std::endl;
-    std::cout << "3. ⚠️  vector reserve 可减少扩容，但提升有限（1.2x）" << std::endl;
-    std::cout << "4. ⚠️  emplace_back 优势在于直接构造，避免临时对象创建" << std::endl;
+    std::cout << "3. ⚠️  vector reserve 可减少扩容，但提升有限（移动扩容已快）" << std::endl;
+    std::cout << "4. ⚠️  emplace_back vs push_back(临时对象): 稍快（避免临时对象）" << std::endl;
+    std::cout << "   但带参数构造可能比拷贝慢（初始化方式影响）" << std::endl;
     std::cout << "5. ⚠️  std::swap 使用移动语义，避免深拷贝但仍有开销（1.2x）" << std::endl;
     std::cout << "6. ⚠️  字符串拼接 operator+ 已优化，手动 std::move 收益有限" << std::endl;
     std::cout << "\n关键洞察:" << std::endl;
     std::cout << "- 移动语义在以下场景最有价值：对象移动、函数返回、容器操作" << std::endl;
     std::cout << "- 编译器优化（RVO、SSO、字符串优化）可能掩盖移动语义的效果" << std::endl;
-    std::cout << "- 设计性能测试时需要考虑编译器优化和测试方法的公平性" << std::endl;
+    std::cout << "- 拷贝不总是慢：std::copy(memcpy) 可能比 for 循环初始化快" << std::endl;
+    std::cout << "- emplace_back 的优势是避免临时对象，不是替代拷贝或移动" << std::endl;
+    std::cout << "- 设计性能测试时需要考虑编译器优化、初始化方式等因素" << std::endl;
+    std::cout << "\n重要结论（测试4.5）:" << std::endl;
+    std::cout << "- 拷贝构造使用 std::copy，可能使用 memcpy (批量操作)" << std::endl;
+    std::cout << "- 带参数构造使用 for 循环逐个初始化 (逐个操作)" << std::endl;
+    std::cout << "- 这就是为什么构造对象可能比拷贝对象慢的原因！" << std::endl;
+    std::cout << "- emplace_back 应该对比 push_back(临时对象)，而不是拷贝" << std::endl;
     std::cout << "========================================" << std::endl;
 }
 
