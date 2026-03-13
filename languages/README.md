@@ -24,6 +24,8 @@ languages/
 │   ├── move-semantics/  # 移动语义
 │   ├── concurrency/     # 并发编程
 │   └── ranges/          # Ranges (C++20)
+├── go/                  # Go 实验
+│   └── goroutines/     # 并发编程
 └── ...
 ```
 

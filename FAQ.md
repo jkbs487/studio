@@ -4,9 +4,150 @@
 
 ## 目录
 
+- [Go 相关](#go-相关)
 - [C++ 相关](#c-相关)
 - [编译和构建](#编译和构建)
 - [代码问题](#代码问题)
+
+---
+
+## Go 相关
+
+### 运行时检测：Go 未安装
+
+**问题：** 运行 Go 代码时提示命令未找到
+
+**错误信息：**
+```
+zsh: command not found: go
+```
+
+**解决方案：**
+
+**macOS (使用 Homebrew):**
+```bash
+brew install go
+
+# 验证安装
+go version
+```
+
+**Linux:**
+```bash
+# 下载安装包
+wget https://go.dev/dl/go1.21.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf go1.21.linux-amd64.tar.gz
+
+# 添加到 PATH
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+source ~/.bashrc
+```
+
+**Windows:**
+- 下载 MSI 安装包：https://go.dev/dl/
+- 或使用 Chocolatey: `choco install golang`
+
+### Go 并发编程：生产者-消费者 deadlock
+
+**问题：** 使用 WaitGroup 时出现 deadlock
+
+**错误信息：**
+```
+fatal error: all goroutines are asleep - deadlock!
+```
+
+**原因：** 多个 WaitGroup 混用或生产者/消费者的同步逻辑不正确
+
+**解决方案：**
+
+```go
+// ❌ 错误：同一个 WaitGroup 用于生产者和消费者
+wg.Add(numProducers)  // 生产者
+wg.Add(numConsumers)  // 消费者
+wg.Wait()  // 可能导致死锁
+
+// ✅ 正确：分别等待生产者和消费者
+var producerWg sync.WaitGroup
+var consumerWg sync.WaitGroup
+
+// 启动生产者
+for p := 0; p < numProducers; p++ {
+    producerWg.Add(1)
+    go func(id int) {
+        defer producerWg.Done()
+        // 生产数据...
+        ch <- item
+    }(p)
+}
+
+// 启动消费者
+for c := 0; c < numConsumers; c++ {
+    consumerWg.Add(1)
+    go func(id int) {
+        defer consumerWg.Done()
+        for {
+            item, ok := <-ch
+            if !ok {
+                return
+            }
+            // 消费数据...
+        }
+    }(c)
+}
+
+// 等待生产者完成
+producerWg.Wait()
+// 关闭通道，通知消费者没有更多数据
+close(ch)
+// 等待消费者完成
+consumerWg.Wait()
+```
+
+**关键点：**
+- 生产者完成后才能关闭 channel
+- 关闭 channel 后消费者才能退出
+- 使用两个独立的 WaitGroup 分别等待生产者和消费者
+
+### Go 编译运行
+
+**快速运行：**
+```bash
+go run languages/go/goroutines/main.go
+```
+
+**编译：**
+```bash
+go build -o output languages/go/goroutines/main.go
+./output
+```
+
+### Go 通道遍历注意事项
+
+**问题：** 遍历已关闭通道时没有输出
+
+**原因：** 遍历已关闭的空通道不会产生任何值
+
+```go
+// ✅ 正确：先填充数据，再关闭，再遍历
+buffered := make(chan string, 3)
+buffered <- "first"
+buffered <- "second"
+buffered <- "third"
+close(buffered)
+
+// 现在遍历会输出所有值
+for msg := range buffered {
+    fmt.Println(msg)
+}
+
+// ❌ 错误：创建空通道后立即关闭，再遍历
+ch := make(chan string)
+close(ch)
+for msg := range ch {  // 不会输出任何内容
+    fmt.Println(msg)
+}
+```
 
 ---
 

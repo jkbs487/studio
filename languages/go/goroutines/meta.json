@@ -1,0 +1,11 @@
+{
+  "name": "go-goroutines",
+  "description": "探索 Go 并发编程：goroutine、channel、select、sync 包、上下文取消",
+  "created": "2026-03-13",
+  "language": "go",
+  "language_version": "1.18+",
+  "tags": ["goroutine", "channel", "concurrency", "concurrent"],
+  "ai_participation": "full",
+  "ai_model": "claude-3-sonnet",
+  "source": "ai"
+}

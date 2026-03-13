@@ -36,6 +36,12 @@
 | templates | C++20 | Concepts |
 | ranges | C++20 | Ranges 库 |
 
+### Go 实验版本要求
+
+| 实验 | 最低版本 | 关键特性 |
+|------|----------|----------|
+| goroutines | 1.18+ | goroutine、channel、sync、context |
+
 ## 目录结构
 
 ```
@@ -43,8 +49,6 @@ studio/
 ├── CLAUDE.md             # AI协作指南（给AI助手的上下文）
 ├── README.md             # 项目说明（本文档）
 ├── FAQ.md                # 常见问题和解决方案
-├── experiments/          # 实验代码目录
-│   └── _template/        # 实验模板
 ├── languages/            # 语言特性研究（核心）
 │   ├── python/           # Python 实验
 │   │   ├── decorators/   # 装饰器
@@ -55,18 +59,43 @@ studio/
 │   │   ├── pattern-matching/# 模式匹配
 │   │   ├── dataclasses/  # 数据类
 │   │   └── exception-groups/# 异常组
-│   └── cpp/              # C++ 实验 (C++20/23)
-│       ├── templates/    # 模板
-│       ├── smart-pointers/# 智能指针
-│       ├── lambda/       # Lambda 表达式
-│       ├── move-semantics/# 移动语义
-│       ├── concurrency/  # 并发编程
-│       └── ranges/       # Ranges (C++20)
+│   ├── cpp/              # C++ 实验 (C++20/23)
+│   │   ├── templates/    # 模板
+│   │   ├── smart-pointers/# 智能指针
+│   │   ├── lambda/       # Lambda 表达式
+│   │   ├── move-semantics/# 移动语义
+│   │   ├── concurrency/  # 并发编程
+│   │   └── ranges/       # Ranges (C++20)
+│   └── go/               # Go 实验
+│       └── goroutines/   # 并发编程
 ├── tools/                # 辅助工具脚本
+│   └── list_experiments.py # 列出所有实验
 └── notes/                # 研究笔记
 ```
 
 ## 快速开始
+
+### 查看所有实验
+
+使用 `list_experiments.py` 快速浏览所有实验：
+
+```bash
+python tools/list_experiments.py
+```
+
+输出示例：
+```
+已有实验 (15 个):
+
+名称: go-goroutines
+语言: go (1.18+)
+描述: 探索 Go 并发编程：goroutine、channel、select、sync 包、上下文取消
+标签: [goroutine, channel, concurrency, concurrent]
+创建时间: 2026-03-13
+来源: AI生成
+AI参与: 完全AI
+路径: languages/go/goroutines
+```
 
 ### 运行 Python 实验
 
@@ -103,9 +132,20 @@ cmake --build build
 
 详见各语言目录下的 `README.md`。
 
+### 运行 Go 实验
+
+```bash
+# 确保已安装 Go 1.18+
+go version
+
+# 运行实验
+go run languages/go/goroutines/main.go
+```
+
 ## 常见问题
 
 遇到问题？查看 [FAQ.md](./FAQ.md) 获取常见问题的解决方案，包括：
+- Go 编译运行问题
 - C++ 编译器配置问题
 - 智能指针编译错误
 - 构建系统问题

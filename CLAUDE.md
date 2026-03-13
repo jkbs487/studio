@@ -5,7 +5,7 @@
 ## 项目定位
 
 这是一个**AI原生实验室代码库**，用于：
-1. 研究各种编程语言的**最新特性**（C++20/23、Python 3.12+、Rust 2021等）
+1. 研究各种编程语言的**最新特性**（C++20/23、Python 3.12+、Go 1.18+、Rust 2021等）
 2. 探索人机协作的编程模式
 
 **核心原则**：
@@ -20,8 +20,6 @@ studio/
 ├── README.md              # 项目说明
 ├── FAQ.md                 # 常见问题和解决方案
 ├── package.json           # 项目配置
-├── experiments/           # 独立实验（通用）
-│   └── _template/         # 实验模板
 ├── languages/             # 语言特性研究（核心）
 │   ├── python/            # Python 示例
 │   │   ├── README.md      # Python 实验总览
@@ -29,16 +27,20 @@ studio/
 │   │   ├── async/         # 异步编程
 │   │   ├── metaclass/     # 元类
 │   │   └── generators/    # 生成器
-│   └── cpp/               # C++ 示例 (C++20/23)
-│       ├── README.md      # C++ 实验总览
-│       ├── CMakeLists.txt # CMake 构建配置
-│       ├── templates/     # 模板
-│       ├── smart-pointers/# 智能指针
-│       ├── lambda/        # Lambda 表达式
-│       ├── move-semantics/# 移动语义
-│       ├── concurrency/   # 并发编程
-│       └── ranges/        # Ranges (C++20)
+│   ├── cpp/               # C++ 示例 (C++20/23)
+│   │   ├── README.md      # C++ 实验总览
+│   │   ├── CMakeLists.txt # CMake 构建配置
+│   │   ├── templates/     # 模板
+│   │   ├── smart-pointers/# 智能指针
+│   │   ├── lambda/        # Lambda 表达式
+│   │   ├── move-semantics/# 移动语义
+│   │   ├── concurrency/   # 并发编程
+│   │   └── ranges/        # Ranges (C++20)
+│   └── go/                # Go 示例
+│       ├── README.md      # Go 实验总览
+│       └── goroutines/    # 并发编程
 ├── tools/                 # 辅助工具（Python）
+│   └── list_experiments.py# 列出所有实验
 └── notes/                 # 研究笔记
 ```
 
@@ -70,6 +72,14 @@ languages/{language}/{feature}/
 ├── README.md          # 说明文档
 ├── main.cpp           # 实验代码
 └── CMakeLists.txt     # CMake 构建配置（推荐）
+```
+
+**Go 实验：**
+```
+languages/{language}/{feature}/
+├── meta.json    # 元数据（必需）
+├── README.md    # 说明文档
+└── main.go      # 实验代码
 ```
 
 每个语言目录还应包含：
@@ -135,6 +145,14 @@ C++ 顶层目录应包含：
 | Lambda | C++14 | 泛型 Lambda |
 | 新特性 | C++20 | Concepts、Ranges、协程 |
 
+#### Go 版本标注参考
+
+| 实验类型 | 最低版本 | 关键特性 |
+|----------|----------|----------|
+| 并发编程 | 1.18+ | goroutine、channel、泛型 |
+| 错误处理 | 1.13+ | 错误包装、Unwrap |
+| 泛型 | 1.18+ | 类型参数、约束 |
+
 #### 标注位置
 
 1. **README.md 标题**: `# 实验名称 \`语言版本\``（如 `# Python 装饰器 \`Python 3.10+\``）
@@ -146,14 +164,8 @@ C++ 顶层目录应包含：
 Python 脚本位于 `tools/` 目录：
 
 ```bash
-# 创建新实验
-python tools/new_experiment.py <name> [language]
-
-# 评估代码质量
-python tools/evaluate_code.py <path>
-
-# 同步元数据索引
-python tools/sync_meta.py
+# 列出所有实验
+python tools/list_experiments.py
 ```
 
 ## 常见任务指南
@@ -245,6 +257,24 @@ python tools/new_experiment.py python-async-patterns python
 - 不要忽略跨平台兼容性
 ```
 
+**Go 实验：**
+```
+创建一个 Go 语言特性实验，主题是 {feature}。
+
+要求：
+1. 包含 meta.json 元数据（language: "go"）
+2. 包含 README.md 说明
+3. 包含可直接运行的 main.go 代码
+4. 代码包含详细注释
+5. 演示 {feature} 的核心概念和用法
+6. 使用 Go 1.18+ 特性
+
+反面提示：
+- 不要添加不必要的依赖
+- 不要生成超出实验范围的代码
+- 不要使用项目不支持的语言版本
+```
+
 ### 评估代码质量
 ```
 评估以下代码的质量：
@@ -278,6 +308,12 @@ python tools/new_experiment.py python-async-patterns python
 - 在 README 中说明编译器要求和依赖
 - 避免 `using namespace std`，始终显式使用 `std::` 前缀（防止命名冲突和潜在 bug）
 - 新特性优先：优先使用 `std::format` 替代 `printf`/`iostream`，`std::jthread` 替代 `std::thread` 等
+
+**Go 特定：**
+- **使用最新标准**：Go 1.18+，充分利用泛型等新特性
+- 并发编程使用 `sync` 包和 `context` 包
+- 生产者-消费者模式使用独立的 WaitGroup 分别等待
+- 错误处理遵循 Go 惯例：`if err != nil`
 
 **跨平台兼容：**
 - 确保代码在 Windows、Linux、macOS 上都能编译运行
@@ -414,4 +450,43 @@ languages/cpp/
 | 记录经验 | 将新问题补充到 FAQ 中 |
 
 **注意：** 具体的错误信息和代码示例请参考 [FAQ.md](./FAQ.md)。
+
+## 实践案例：Go 并发编程经验总结
+
+### 关键经验
+
+**生产者-消费者模式：**
+- 使用独立的 `WaitGroup` 分别等待生产者和消费者
+- 生产者完成后才能关闭 channel
+- 关闭 channel 后消费者才能退出
+- 避免混用同一个 WaitGroup 导致 deadlock
+
+**Channel 使用：**
+- 无缓冲 channel：同步通信，发送和接收必须同时就绪
+- 有缓冲 channel：异步通信，发送者在缓冲区满时阻塞
+- 关闭 channel 后，接收者会收到零值和 `false`
+- 使用 `for range` 遍历已关闭的 channel
+
+**Context 使用：**
+- 使用 `context.Background()` 作为根上下文
+- 使用 `context.WithCancel` 创建可取消上下文
+- 使用 `context.WithTimeout` 设置超时
+- 传递 context 作为函数第一个参数
+
+**Sync 包：**
+- `WaitGroup`：等待一组 goroutine 完成
+- `Mutex`：互斥锁，保护共享资源
+- `RWMutex`：读写锁，读多写少场景
+- `Once`：确保函数只执行一次
+
+### 最佳实践总结
+
+| 场景 | 推荐方案 |
+|------|----------|
+| 等待多个 goroutine | `sync.WaitGroup` |
+| 生产者-消费者 | 独立的 WaitGroup + close channel |
+| 共享资源保护 | `sync.Mutex` 或 `sync.RWMutex` |
+| 超时控制 | `context.WithTimeout` |
+| 取消操作 | `context.WithCancel` |
+| 原子计数 | `sync/atomic` |
 
