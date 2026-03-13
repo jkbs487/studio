@@ -1,0 +1,10 @@
+{
+  "name": "python-exception-groups",
+  "description": "探索 Python Exception Groups：except* 语法、处理多个异常、异步并发异常",
+  "created": "2026-03-13",
+  "language": "python",
+  "tags": ["exception-groups", "exception", "python-3.11"],
+  "ai_participation": "full",
+  "ai_model": "claude-3-sonnet",
+  "source": "ai"
+}

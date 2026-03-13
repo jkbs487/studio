@@ -6,6 +6,28 @@
 
 ## 实验列表
 
+### 数据类 (dataclasses) `Python 3.7+`
+
+探索 Python dataclasses，用更少的代码定义数据结构。
+
+**运行：**
+```bash
+python languages/python/dataclasses/main.py
+```
+
+---
+
+### 异常组 (exception-groups) `Python 3.11+`
+
+探索 Python 3.11 引入的 Exception Groups 和 `except*` 语法。
+
+**运行：**
+```bash
+python languages/python/exception-groups/main.py
+```
+
+---
+
 ### 装饰器 (decorators) `Python 3.10+`
 
 探索 Python 装饰器的各种用法和技巧。

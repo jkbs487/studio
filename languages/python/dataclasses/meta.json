@@ -1,0 +1,10 @@
+{
+  "name": "python-dataclasses",
+  "description": "探索 Python dataclasses：数据类装饰器、字段选项、比较方法、冻结",
+  "created": "2026-03-13",
+  "language": "python",
+  "tags": ["dataclasses", "data-class", "advanced"],
+  "ai_participation": "full",
+  "ai_model": "claude-3-sonnet",
+  "source": "ai"
+}

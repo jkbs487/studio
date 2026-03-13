@@ -217,6 +217,11 @@ python tools/new_experiment.py python-async-patterns python
 4. 代码包含详细注释
 5. 演示 {feature} 的核心概念和用法
 6. 使用 Python 3.12+ 最新语法特性
+
+反面提示：
+- 不要添加不必要的依赖
+- 不要生成超出实验范围的代码
+- 不要使用项目不支持的语言版本
 ```
 
 **C++ 实验：**
@@ -233,6 +238,11 @@ python tools/new_experiment.py python-async-patterns python
 7. 使用 C++20 标准（条件允许时使用 C++23 特性）
 8. 代码应跨平台兼容
 9. 避免 using namespace std，显式使用 std:: 前缀
+
+反面提示：
+- 不要添加非标准库依赖
+- 不要生成仅限特定编译器的代码
+- 不要忽略跨平台兼容性
 ```
 
 ### 评估代码质量
