@@ -179,6 +179,26 @@ cmake --open build
 
 ---
 
+### 协程 (coroutines) `C++20`
+
+探索 C++20 引入的协程支持，实现异步编程和生成器模式。
+
+**内容：**
+- 协程基础 - 协程函数、协程句柄、promise_type
+- `co_await` - 等待异步操作
+- `co_yield` - 产生值和生成器模式
+- `co_return` - 从协程返回值
+- `suspend_always`/`suspend_never` - 协程暂停策略
+- 异步生成器和 Task 框架
+- 协程与标准库的结合
+
+**运行：**
+```bash
+./build/coroutines/coroutines
+```
+
+---
+
 ## 手动编译 (不使用 CMake)
 
 如果不想用 CMake，也可以手动编译：

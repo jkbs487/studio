@@ -1,0 +1,11 @@
+{
+  "name": "cpp-coroutines",
+  "description": "探索 C++20 协程：co_await、co_yield、co_return、协程句柄、promise_type",
+  "created": "2026-03-13",
+  "language": "cpp",
+  "language_version": "C++20",
+  "tags": ["coroutine", "co_await", "co_yield", "async", "modern-cpp"],
+  "ai_participation": "full",
+  "ai_model": "claude-3-sonnet",
+  "source": "ai"
+}

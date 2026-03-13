@@ -8,6 +8,7 @@
 - [C++ 相关](#c-相关)
 - [编译和构建](#编译和构建)
 - [代码问题](#代码问题)
+- [性能对比实验](#性能对比实验)
 
 ---
 
@@ -152,6 +153,184 @@ for msg := range ch {  // 不会输出任何内容
 ---
 
 ## C++ 相关
+
+### C++ 协程编译错误
+
+#### std::future 不支持协程
+
+**错误信息：**
+```
+error: 'std::coroutine_traits<std::future<int>, int, int>' has no member named 'promise_type'
+```
+
+**原因：** C++20 标准库的 `std::future` 没有内置协程支持（需 C++23 或第三方库）
+
+**解决方案：** 自定义返回类型，实现自己的 `promise_type`
+
+```cpp
+// ❌ 错误：std::future 不支持协程
+std::future<int> asyncAdd(int a, int b) {
+    co_return a + b;
+}
+
+// ✅ 正确：自定义返回类型
+struct SimpleFuture {
+    struct promise_type;
+    std::coroutine_handle<promise_type> handle;
+
+    struct promise_type {
+        int value = 0;
+        SimpleFuture get_return_object() {
+            auto h = std::coroutine_handle<promise_type>::from_promise(*this);
+            return SimpleFuture{h};
+        }
+        std::suspend_never initial_suspend() { return {}; }
+        std::suspend_always final_suspend() noexcept { return {}; }
+        void return_value(int v) { value = v; }
+        void unhandled_exception() { std::terminate(); }
+    };
+
+    int value() const { return handle.promise().value; }
+};
+
+SimpleFuture asyncAdd(int a, int b) {
+    co_return a + b;
+}
+```
+
+#### 协程句柄无法访问 promise
+
+**错误信息：**
+```
+error: no member named 'promise' in 'std::coroutine_handle<void>'
+```
+
+**原因：** 使用了空的协程句柄模板 `std::coroutine_handle<>`，无法访问 promise
+
+**解决方案：** 使用带模板参数的协程句柄
+
+```cpp
+// ❌ 错误
+std::coroutine_handle<> handle;
+handle.promise().value;
+
+// ✅ 正确
+std::coroutine_handle<promise_type> handle;
+handle.promise().value;
+```
+
+#### promise_type 前向声明缺失
+
+**错误信息：**
+```
+error: use of undeclared identifier 'promise_type'
+```
+
+**原因：** 返回类型中 promise_type 未正确声明
+
+**解决方案：** 前向声明 promise_type
+
+```cpp
+struct SimpleFuture {
+    struct promise_type;  // 前向声明
+    std::coroutine_handle<promise_type> handle;
+
+    struct promise_type {
+        // ...
+    };
+};
+```
+
+#### Lambda 捕获成员变量失败
+
+**错误信息：**
+```
+error: 'duration' in capture list does not name a variable
+```
+
+**原因：** Lambda 不能直接捕获 `this->member`，需要先复制到局部变量
+
+**解决方案：**
+
+```cpp
+// ❌ 错误
+std::thread([handle, duration]() {
+    std::this_thread::sleep_for(duration);  // error
+}).detach();
+
+// ✅ 正确：先复制到局部变量
+auto d = duration;
+std::thread([handle, d]() {
+    std::this_thread::sleep_for(d);
+}).detach();
+```
+
+#### co_yield 序列点警告
+
+**警告信息：**
+```
+warning: multiple unsequenced modifications to 'i'
+```
+
+**原因：** `co_yield i++` 在同一表达式中对 i 进行修改和读取
+
+**解决方案：** 分离 yield 和递增操作
+
+```cpp
+// ❌ 错误
+co_yield i++;
+
+// ✅ 正确
+co_yield i;
+++i;
+```
+
+### C++ 协程运行时问题
+
+#### 协程句柄未销毁
+
+**问题：** 程序运行正常，但存在内存泄漏
+
+**原因：** 协程句柄创建后未调用 `destroy()`
+
+**解决方案：** 使用 RAII 包装协程句柄
+
+```cpp
+struct Generator {
+    std::coroutine_handle<promise_type> handle;
+
+    ~Generator() {
+        if (handle) {
+            handle.destroy();
+        }
+    }
+
+    // 禁止复制
+    Generator(const Generator&) = delete;
+    Generator& operator=(const Generator&) = delete;
+
+    // 允许移动
+    Generator(Generator&& other) noexcept : handle(other.handle) {
+        other.handle = nullptr;
+    }
+};
+```
+
+### C++ 协程编译器支持
+
+| 编译器 | 最低版本 | 编译选项 |
+|--------|----------|----------|
+| GCC | 10+ | `-fcoroutines` |
+| Clang | 16+ | `-fcoroutines` (实验性) |
+| MSVC | 19.14+ | 默认支持 |
+| Apple Clang | 14.0+ | `-fcoroutines` |
+
+**验证编译器支持：**
+```bash
+g++ --version
+# 或
+clang++ --version
+```
 
 ### 编译器未找到
 
@@ -700,6 +879,94 @@ total += value;
 // ✅ 新写法
 volatile size_t total = 0;
 total = total + value;
+```
+
+---
+
+## 性能对比实验
+
+### 运行 benchmark 性能测试
+
+**问题：** 如何运行 C++/Go/Python 性能对比实验？
+
+**解决方案：**
+
+```bash
+cd experiments/benchmark
+
+# 编译并运行（默认）
+./run.sh
+
+# 仅编译
+./run.sh build
+
+# 仅运行
+./run.sh run
+
+# 清理生成文件
+./run.sh clean
+```
+
+### benchmark 编译失败
+
+**问题：** C++ 或 Go 编译失败
+
+**检查：**
+
+```bash
+# 检查 C++ 编译器
+g++ --version
+
+# 检查 Go 编译器
+go version
+
+# 检查 Python
+python3 --version
+```
+
+### benchmark 结果不符合预期
+
+**问题：** 性能测试结果与文档不符
+
+**常见原因：**
+
+1. **编译优化级别不同**
+   - 确保使用 `-O2` 或更高优化级别
+   - Go 默认已优化，但可使用 `go build -ldflags="-s -w"`
+
+2. **硬件差异**
+   - 不同 CPU 架构结果差异很大
+   - ARM 和 x86 性能特性不同
+
+3. **后台进程干扰**
+   - 关闭其他程序再运行测试
+   - 多次运行取平均值
+
+4. **测试数据规模**
+   - 数据量太小无法体现差异
+   - 数据量太大可能触发系统限制
+
+**正确做法：**
+- ✅ 关闭其他程序，减少干扰
+- ✅ 多次运行取平均值
+- ✅ 使用 release 模式编译
+- ✅ 确保使用相同的编译优化级别
+
+### Python 未找到
+
+**问题：** `python: command not found`
+
+**解决方案：**
+
+```bash
+# macOS
+brew install python3
+
+# Linux
+sudo apt install python3
+
+# 使用 python3 替代 python
+python3 main.py
 ```
 
 ---

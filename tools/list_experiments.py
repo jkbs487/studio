@@ -10,6 +10,7 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent.parent
 LANGUAGES_DIR = ROOT_DIR / "languages"
+EXPERIMENTS_DIR = ROOT_DIR / "experiments"
 
 
 def scan_dir(base_dir):
@@ -61,7 +62,10 @@ def format_source(value):
 
 
 def main():
+    # 扫描 languages 目录
     experiments = scan_dir(LANGUAGES_DIR)
+    # 扫描 experiments 目录
+    experiments.extend(scan_dir(EXPERIMENTS_DIR))
 
     print(f"已有实验 ({len(experiments)} 个):\n")
     print("=" * 70)

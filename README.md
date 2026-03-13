@@ -42,6 +42,12 @@
 |------|----------|----------|
 | goroutines | 1.18+ | goroutine、channel、sync、context |
 
+### 综合实验
+
+| 实验 | 语言 | 描述 |
+|------|------|------|
+| benchmark | C++/Go/Python | 经典性能对比实验 |
+
 ## 目录结构
 
 ```
@@ -65,9 +71,12 @@ studio/
 │   │   ├── lambda/       # Lambda 表达式
 │   │   ├── move-semantics/# 移动语义
 │   │   ├── concurrency/  # 并发编程
-│   │   └── ranges/       # Ranges (C++20)
+│   │   ├── ranges/       # Ranges (C++20)
+│   │   └── coroutines/   # 协程 (C++20)
 │   └── go/               # Go 实验
 │       └── goroutines/   # 并发编程
+├── experiments/          # 综合实验
+│   └── benchmark/        # 性能对比实验
 ├── tools/                # 辅助工具脚本
 │   └── list_experiments.py # 列出所有实验
 └── notes/                # 研究笔记
@@ -140,6 +149,24 @@ go version
 
 # 运行实验
 go run languages/go/goroutines/main.go
+```
+
+### 运行性能对比实验
+
+```bash
+cd experiments/benchmark
+
+# 编译并运行（默认）
+./run.sh
+
+# 仅编译
+./run.sh build
+
+# 仅运行
+./run.sh run
+
+# 清理生成文件
+./run.sh clean
 ```
 
 ## 常见问题

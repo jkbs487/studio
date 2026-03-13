@@ -1,0 +1,11 @@
+{
+  "name": "benchmark-performance",
+  "description": "经典性能对比实验：对比 Go、C++、Python 在计算密集型任务上的性能表现",
+  "created": "2026-03-13",
+  "language": "multi",
+  "language_version": "C++20, Go 1.18+, Python 3.8+",
+  "tags": ["benchmark", "performance", "comparison", "cpp", "go", "python"],
+  "ai_participation": "full",
+  "ai_model": "claude-3-sonnet",
+  "source": "ai"
+}
