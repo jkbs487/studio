@@ -1,0 +1,10 @@
+{
+  "name": "python-pattern-matching",
+  "description": "探索 Python 3.10+ 模式匹配语法：match/case",
+  "created": "2026-03-13",
+  "language": "python",
+  "tags": ["pattern-matching", "python310", "advanced"],
+  "ai_participation": "full",
+  "ai_model": "claude-3-sonnet",
+  "source": "ai"
+}

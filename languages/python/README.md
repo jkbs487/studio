@@ -57,6 +57,28 @@ python languages/python/generators/main.py
 
 ---
 
+### 类型提示 (type-hints) `Python 3.9+`
+
+探索 Python 类型提示系统。
+
+**运行：**
+```bash
+python languages/python/type-hints/main.py
+```
+
+---
+
+### 模式匹配 (pattern-matching) `Python 3.10+`
+
+探索 Python 3.10+ 的 match/case 语法。
+
+**运行：**
+```bash
+python languages/python/pattern-matching/main.py
+```
+
+---
+
 ## 快速开始
 
 选择感兴趣的实验目录，运行对应的 `main.py` 文件：

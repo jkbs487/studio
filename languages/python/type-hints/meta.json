@@ -1,0 +1,10 @@
+{
+  "name": "python-type-hints",
+  "description": "探索 Python 类型提示系统：基础注解、typing 模块、泛型、Protocol",
+  "created": "2026-03-13",
+  "language": "python",
+  "tags": ["type-hints", "typing", "advanced"],
+  "ai_participation": "full",
+  "ai_model": "claude-3-sonnet",
+  "source": "ai"
+}
