@@ -20,6 +20,10 @@
 | metaclass | 3.6+ | `__init_subclass__` |
 | async | 3.7+ | `asyncio.run()` |
 | decorators | 3.10+ | `ParamSpec` |
+| type-hints | 3.9+ | 类型提示系统 |
+| pattern-matching | 3.10+ | `match/case` |
+| dataclasses | 3.7+ | `@dataclass` |
+| exception-groups | 3.11+ | `except*` |
 
 ### C++ 实验版本要求
 
@@ -46,7 +50,11 @@ studio/
 │   │   ├── decorators/   # 装饰器
 │   │   ├── async/        # 异步编程
 │   │   ├── metaclass/    # 元类
-│   │   └── generators/   # 生成器
+│   │   ├── generators/   # 生成器
+│   │   ├── type-hints/   # 类型提示
+│   │   ├── pattern-matching/# 模式匹配
+│   │   ├── dataclasses/  # 数据类
+│   │   └── exception-groups/# 异常组
 │   └── cpp/              # C++ 实验 (C++20/23)
 │       ├── templates/    # 模板
 │       ├── smart-pointers/# 智能指针

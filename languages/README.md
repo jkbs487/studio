@@ -8,18 +8,22 @@
 
 ```
 languages/
-├── typescript/
-│   ├── type-system/
-│   ├── generics/
-│   └── patterns/
-├── python/
-│   ├── decorators/
-│   ├── async/
-│   └── metaprogramming/
-├── rust/
-│   ├── ownership/
-│   ├── lifetimes/
-│   └── traits/
+├── python/              # Python 实验
+│   ├── decorators/      # 装饰器
+│   ├── async/           # 异步编程
+│   ├── metaclass/       # 元类
+│   ├── generators/      # 生成器
+│   ├── type-hints/      # 类型提示
+│   ├── pattern-matching/# 模式匹配
+│   ├── dataclasses/     # 数据类
+│   └── exception-groups/# 异常组
+├── cpp/                 # C++ 实验
+│   ├── templates/       # 模板
+│   ├── smart-pointers/ # 智能指针
+│   ├── lambda/          # Lambda 表达式
+│   ├── move-semantics/  # 移动语义
+│   ├── concurrency/     # 并发编程
+│   └── ranges/          # Ranges (C++20)
 └── ...
 ```
 
