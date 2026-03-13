@@ -1,0 +1,10 @@
+{
+  "name": "cpp-ranges",
+  "description": "探索 C++20 Ranges 库：视图、管道操作符、组合式算法",
+  "created": "2026-03-13",
+  "language": "cpp",
+  "tags": ["ranges", "views", "c++20", "modern-cpp"],
+  "ai_participation": "full",
+  "ai_model": "claude-3-sonnet",
+  "source": "ai"
+}

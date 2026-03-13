@@ -1,11 +1,12 @@
 # Studio - AI原生代码实验室
 
-一个用于研究编程语言特性的实验室代码库。
+一个用于研究**最新版本**编程语言特性的实验室代码库。
 
 ## 项目目标
 
-- **语言特性研究** - 探索各种编程语言的独特特性
+- **语言特性研究** - 探索各种编程语言的最新特性（C++20/23、Python 3.12+、Rust 2021等）
 - **AI原生设计** - 让AI助手能够高效理解和操作代码库
+- **前沿技术** - 始终使用各语言的最新稳定标准
 
 ## 目录结构
 
@@ -22,11 +23,13 @@ studio/
 │   │   ├── async/        # 异步编程
 │   │   ├── metaclass/    # 元类
 │   │   └── generators/   # 生成器
-│   └── cpp/              # C++ 实验
+│   └── cpp/              # C++ 实验 (C++20/23)
 │       ├── templates/    # 模板
 │       ├── smart-pointers/# 智能指针
 │       ├── lambda/       # Lambda 表达式
-│       └── move-semantics/# 移动语义
+│       ├── move-semantics/# 移动语义
+│       ├── concurrency/  # 并发编程
+│       └── ranges/       # Ranges (C++20)
 ├── tools/                # 辅助工具脚本
 └── notes/                # 研究笔记
 ```
@@ -41,14 +44,18 @@ python languages/python/decorators/main.py
 
 ### 运行 C++ 实验
 
-**首次运行前，请确保已安装编译环境：**
+**首次运行前，请确保已安装支持 C++20 的编译环境：**
 
 ```bash
 # Linux (Ubuntu/Debian)
 sudo apt update
 sudo apt install build-essential cmake
 
-# 验证安装
+# macOS
+xcode-select --install
+brew install cmake
+
+# 验证安装（需要 GCC 10+ 或 Clang 13+）
 g++ --version && cmake --version
 ```
 
@@ -58,7 +65,8 @@ g++ --version && cmake --version
 cd languages/cpp
 cmake -B build
 cmake --build build
-./build/lambda/lambda
+./build/concurrency/concurrency   # 并发编程
+./build/ranges/ranges             # C++20 Ranges
 ```
 
 详见各语言目录下的 `README.md`。

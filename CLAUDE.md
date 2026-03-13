@@ -5,8 +5,14 @@
 ## 项目定位
 
 这是一个**AI原生实验室代码库**，用于：
-1. 研究各种编程语言的特性
+1. 研究各种编程语言的**最新特性**（C++20/23、Python 3.12+、Rust 2021等）
 2. 探索人机协作的编程模式
+
+**核心原则：始终使用各语言的最新稳定标准**
+
+- C++：使用 C++20，条件允许时使用 C++23 特性
+- Python：使用 Python 3.12+ 语法
+- Rust：使用 Rust 2021 Edition
 
 ## 当前项目结构
 
@@ -25,13 +31,15 @@ studio/
 │   │   ├── async/         # 异步编程
 │   │   ├── metaclass/     # 元类
 │   │   └── generators/    # 生成器
-│   └── cpp/               # C++ 示例
+│   └── cpp/               # C++ 示例 (C++20/23)
 │       ├── README.md      # C++ 实验总览
 │       ├── CMakeLists.txt # CMake 构建配置
 │       ├── templates/     # 模板
 │       ├── smart-pointers/# 智能指针
 │       ├── lambda/        # Lambda 表达式
-│       └── move-semantics/# 移动语义
+│       ├── move-semantics/# 移动语义
+│       ├── concurrency/   # 并发编程
+│       └── ranges/        # Ranges (C++20)
 ├── tools/                 # 辅助工具（Python）
 └── notes/                 # 研究笔记
 ```
@@ -177,6 +185,7 @@ python tools/new_experiment.py python-async-patterns python
 3. 包含可直接运行的 main.py 代码
 4. 代码包含详细注释
 5. 演示 {feature} 的核心概念和用法
+6. 使用 Python 3.12+ 最新语法特性
 ```
 
 **C++ 实验：**
@@ -190,8 +199,9 @@ python tools/new_experiment.py python-async-patterns python
 4. 包含 CMakeLists.txt 构建配置
 5. 代码包含详细注释
 6. 演示 {feature} 的核心概念和用法
-7. 使用 C++17 或更高标准（推荐 C++20）
+7. 使用 C++20 标准（条件允许时使用 C++23 特性）
 8. 代码应跨平台兼容
+9. 避免 using namespace std，显式使用 std:: 前缀
 ```
 
 ### 评估代码质量
@@ -216,14 +226,17 @@ python tools/new_experiment.py python-async-patterns python
 - 避免过度工程化
 
 **Python 特定：**
-- 使用 Python 3.8+ 语法
+- **使用最新标准**：Python 3.12+ 语法，使用新特性如类型提示、match-case、f-string 增强等
+- 优先使用类型注解和 `typing` 模块的最新特性
 
 **C++ 特定：**
+- **使用最新标准**：默认 C++20，条件允许时使用 C++23 特性（如 `std::expected`、Deducing this 等）
 - 使用 CMake 作为主要构建方式，确保跨平台兼容
 - 提供 Windows/Linux/macOS 的编译运行说明
-- 使用 C++17 或更高标准（推荐 C++20）
 - 对于需要线程的实验，正确链接线程库
 - 在 README 中说明编译器要求和依赖
+- 避免 `using namespace std`，始终显式使用 `std::` 前缀（防止命名冲突和潜在 bug）
+- 新特性优先：优先使用 `std::format` 替代 `printf`/`iostream`，`std::jthread` 替代 `std::thread` 等
 
 **跨平台兼容：**
 - 确保代码在 Windows、Linux、macOS 上都能编译运行
@@ -244,6 +257,10 @@ python tools/new_experiment.py python-async-patterns python
 - 智能指针
 - Lambda 表达式
 - 移动语义
+
+后续新增：
+- 并发编程
+- Ranges (C++20)
 
 **2. 创建目录结构**
 ```
@@ -326,6 +343,18 @@ languages/cpp/
 - 类需要 `shared_from_this()` 时，必须继承 `enable_shared_from_this`
 - 智能指针的循环引用使用 `weak_ptr` 解决
 - 优先考虑 RAII 原则，避免手动管理资源
+
+**C++ 并发编程最佳实践：**
+- 死锁避免：使用 `std::scoped_lock` (C++17) 或 `std::lock` + `adopt_lock`
+- 线程安全单例：使用 C++11 局部静态变量
+- 条件变量：始终使用带谓词的 `wait()` 重载
+- 原子操作：适合简单计数器，复杂操作仍需锁保护
+
+**C++ Ranges 注意事项：**
+- 视图是惰性求值，每次迭代都会重新计算
+- 避免歧义：std 和 std::ranges 的算法需明确命名空间
+- macOS 默认 clang (libc++) 对 Ranges 支持不完整
+- 视图不可复制，只能移动
 
 **测试验证：**
 - 编译成功后立即运行程序验证功能

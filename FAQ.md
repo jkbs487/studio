@@ -405,6 +405,162 @@ vec.push_back(std::move(obj));   // 移动（obj 不再使用）
 - 对于构造开销小的对象，emplace_back 和 push_back 差异不大
 - 不要用 emplace_back 替代 `push_back(已有对象)` 的拷贝
 
+### 并发编程常见问题
+
+#### 线程对象未 join 或 detach
+
+**错误信息：**
+```
+terminate called without an active exception
+```
+
+**原因：** 线程对象在销毁前未调用 `join()` 或 `detach()`
+
+**解决方案：**
+```cpp
+// 方案1：join 等待结束
+std::thread t(func);
+t.join();  // 必须调用
+
+// 方案2：detach 分离
+std::thread t(func);
+t.detach();  // 分离后后台运行
+```
+
+#### 死锁
+
+**问题：** 程序卡死，多个线程互相等待
+
+**原因：** 多个 mutex 按不同顺序加锁
+
+**解决方案：**
+```cpp
+// ❌ 错误：不同线程按不同顺序加锁
+void thread1() {
+    std::lock_guard<std::mutex> l1(m1);
+    std::lock_guard<std::mutex> l2(m2);
+}
+
+void thread2() {
+    std::lock_guard<std::mutex> l2(m2);  // 顺序相反！
+    std::lock_guard<std::mutex> l1(m1);
+}
+
+// ✅ 正确：使用 scoped_lock
+std::scoped_lock lock(m1, m2);
+
+// ✅ 正确：使用 std::lock
+std::lock(m1, m2);
+std::lock_guard<std::mutex> l1(m1, std::adopt_lock);
+std::lock_guard<std::mutex> l2(m2, std::adopt_lock);
+```
+
+#### 竞争条件
+
+**问题：** 多线程访问共享数据，结果不确定
+
+**解决方案：**
+```cpp
+// 使用互斥锁
+std::mutex mtx;
+int counter = 0;
+
+void increment() {
+    std::lock_guard<std::mutex> lock(mtx);
+    ++counter;
+}
+
+// 或使用原子操作
+std::atomic<int> counter(0);
+void increment() {
+    counter.fetch_add(1);
+}
+```
+
+#### 条件变量虚假唤醒
+
+**问题：** 线程被意外唤醒
+
+**原因：** 条件变量的 `wait()` 可能被虚假唤醒
+
+**解决方案：**
+```cpp
+// ✅ 使用带谓词的 wait
+cv.wait(lock, [] { return ready; });
+
+// ❌ 错误：可能虚假唤醒
+cv.wait(lock);
+```
+
+### Ranges 常见问题
+
+#### 视图不可迭代
+
+**错误：**
+```
+error: passing 'const xxx_view' as 'this' argument discards qualifiers
+```
+
+**原因：** 视图在 const 上下文中不可迭代
+
+**解决方案：**
+```cpp
+// 将视图复制到 vector
+std::vector<int> result;
+for (int x : view | std::views::filter(...)) {
+    result.push_back(x);
+}
+```
+
+#### std::ranges 算法歧义
+
+**错误：**
+```
+error: reference to 'sort' is ambiguous
+```
+
+**原因：** std 和 std::ranges 都有同名算法
+
+**解决方案：**
+```cpp
+// 明确命名空间
+std::sort(vec.begin(), vec.end());           // std 算法
+std::ranges::sort(vec);                      // ranges 算法
+```
+
+#### macOS 编译 Ranges 失败
+
+**问题：** macOS 默认 clang (libc++) 对 C++20 Ranges 支持不完整
+
+**解决方案：**
+```bash
+# 使用 GCC (需要安装)
+g++ -std=c++20 main.cpp -o program
+
+# 或指定 libstdc++
+clang++ -std=c++20 -stdlib=libc++ main.cpp  # 可能不支持
+```
+
+#### volatile 复合赋值警告
+
+**错误：**
+```
+warning: compound assignment to object of volatile-qualified type is deprecated
+```
+
+**原因：** C++20 中对 volatile 类型使用复合赋值被弃用
+
+**解决方案：**
+```cpp
+// ❌ 旧写法
+volatile size_t total = 0;
+total += value;
+
+// ✅ 新写法
+volatile size_t total = 0;
+total = total + value;
+```
+
 ---
 
 ## 寻求帮助

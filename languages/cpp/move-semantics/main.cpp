@@ -351,7 +351,7 @@ void demo_performance() {
     {
         volatile size_t total = 0;
         for (size_t i = 0; i < func_calls; ++i) {
-            total += by_value(large_str);  // 每次拷贝字符串
+            total = total + by_value(large_str);  // 每次拷贝字符串
         }
     }
     end = std::chrono::high_resolution_clock::now();
@@ -363,7 +363,7 @@ void demo_performance() {
     {
         volatile size_t total = 0;
         for (size_t i = 0; i < func_calls; ++i) {
-            total += by_ref(large_str);  // 只传指针
+            total = total + by_ref(large_str);  // 只传指针
         }
     }
     end = std::chrono::high_resolution_clock::now();

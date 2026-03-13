@@ -1,0 +1,10 @@
+{
+  "name": "cpp-concurrency",
+  "description": "探索 C++ 并发编程：线程、互斥锁、原子操作、future/promise、线程池",
+  "created": "2026-03-13",
+  "language": "cpp",
+  "tags": ["concurrency", "thread", "mutex", "atomic", "modern-cpp"],
+  "ai_participation": "full",
+  "ai_model": "claude-3-sonnet",
+  "source": "ai"
+}

@@ -13,6 +13,50 @@
 7. 返回值优化 (RVO/NRVO)
 8. 移动语义的性能优势
 
+## 核心概念
+
+### 左值 vs 右值
+
+- **左值** - 有名字的变量，可以取地址
+- **右值** - 临时对象，无法取地址
+
+```cpp
+int a = 10;   // a 是左值，10 是右值
+int b = a;    // 拷贝
+int c = std::move(a);  // 移动
+```
+
+### std::move
+
+将左值转换为右值引用，不实际移动任何东西。
+
+```cpp
+std::string s1 = "hello";
+std::string s2 = std::move(s1);  // s1 变为空
+```
+
+### std::forward
+
+完美转发，保留参数的左值/右值属性。
+
+```cpp
+template<typename T>
+void wrapper(T&& arg) {
+    process(std::forward<T>(arg));
+}
+```
+
+### RVO/NRVO
+
+返回值优化，编译器可以直接在调用位置构造返回值。
+
+```cpp
+Widget makeWidget() {
+    Widget w;
+    return w;  // NRVO，可能不发生拷贝/移动
+}
+```
+
 ## 编译与运行
 
 **使用 CMake（推荐）：**
