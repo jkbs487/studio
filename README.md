@@ -8,6 +8,30 @@
 - **AI原生设计** - 让AI助手能够高效理解和操作代码库
 - **前沿技术** - 始终使用各语言的最新稳定标准
 
+## 语言版本要求
+
+各实验根据实际使用的特性标注最低版本要求：
+
+### Python 实验版本要求
+
+| 实验 | 最低版本 | 关键特性 |
+|------|----------|----------|
+| generators | 3.3+ | `yield from` |
+| metaclass | 3.6+ | `__init_subclass__` |
+| async | 3.7+ | `asyncio.run()` |
+| decorators | 3.10+ | `ParamSpec` |
+
+### C++ 实验版本要求
+
+| 实验 | 最低版本 | 关键特性 |
+|------|----------|----------|
+| move-semantics | C++11 | 右值引用、移动语义 |
+| smart-pointers | C++11 | 智能指针 |
+| concurrency | C++11/17 | 线程、原子操作、scoped_lock |
+| lambda | C++14 | 泛型 Lambda |
+| templates | C++20 | Concepts |
+| ranges | C++20 | Ranges 库 |
+
 ## 目录结构
 
 ```

@@ -1,6 +1,8 @@
-# Python 装饰器
+# Python 装饰器 `Python 3.10+`
 
 探索 Python 装饰器的各种用法和技巧。
+
+> **语言版本**: Python 3.10 或更高（需要 `ParamSpec` 支持）
 
 ## 包含内容
 

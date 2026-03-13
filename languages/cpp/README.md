@@ -1,6 +1,8 @@
-# C++ 语言特性研究
+# C++ 语言特性研究 (C++20/23)
 
-本目录包含 C++ 语言特性的实验和研究，主要涵盖现代 C++ (C++11/14/17/20) 的核心特性。
+本目录包含 C++ 语言特性的实验和研究，主要涵盖现代 C++ (C++20/23) 的核心特性。
+
+> **语言版本要求**: C++20 或更高（条件允许时使用 C++23 特性）
 
 ## 快速开始 (CMake)
 
@@ -55,7 +57,8 @@ cmake --open build
 
 ## 实验列表
 
-### 模板 (templates)
+### 模板 (templates) `C++20`
+
 探索 C++ 强大的模板系统。
 
 **内容：**
@@ -74,7 +77,8 @@ cmake --open build
 
 ---
 
-### 智能指针 (smart-pointers)
+### 智能指针 (smart-pointers) `C++11+`
+
 探索 C++ 现代化的内存管理工具。
 
 **内容：**
@@ -93,7 +97,8 @@ cmake --open build
 
 ---
 
-### Lambda 表达式 (lambda)
+### Lambda 表达式 (lambda) `C++14/17`
+
 探索 C++ Lambda 表达式的功能和应用。
 
 **内容：**
@@ -113,7 +118,8 @@ cmake --open build
 
 ---
 
-### 移动语义 (move-semantics)
+### 移动语义 (move-semantics) `C++11+`
+
 探索 C++11 引入的移动语义，提升程序性能。
 
 **内容：**
@@ -129,6 +135,46 @@ cmake --open build
 **运行：**
 ```bash
 ./build/move-semantics/move-semantics
+```
+
+---
+
+### 并发编程 (concurrency) `C++11/17`
+
+探索 C++ 多线程编程的核心概念和实用技术。
+
+**内容：**
+- `std::thread` - 线程创建和管理
+- `std::mutex` - 互斥锁和锁的保护
+- `std::lock_guard/std::unique_lock` - RAII 锁管理
+- `std::condition_variable` - 条件变量和线程同步
+- `std::atomic` - 原子操作和无锁编程
+- `std::future/std::promise` - 异步任务和线程间通信
+- `std::jthread` (C++20) - 自动 join 的线程
+- 线程池实现
+- 死锁避免
+
+**运行：**
+```bash
+./build/concurrency/concurrency
+```
+
+---
+
+### Ranges (ranges) `C++20`
+
+探索 C++20 引入的 Ranges 库，实现组合式数据处理。
+
+**内容：**
+- `std::ranges::range` 概念
+- `std::ranges::views` - 惰性视图
+- 视图适配器 (filter, transform, take, drop 等)
+- 管道操作符组合
+- Ranges 算法
+
+**运行：**
+```bash
+./build/ranges/ranges
 ```
 
 ---

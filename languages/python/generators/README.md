@@ -1,6 +1,8 @@
-# Python 生成器
+# Python 生成器 `Python 3.3+`
 
 探索 Python 生成器和迭代器的各种用法。
+
+> **语言版本**: Python 3.3 或更高（需要 `yield from` 支持）
 
 ## 包含内容
 

@@ -3,6 +3,7 @@
   "description": "探索 Python 生成器：yield、yield from、生成器表达式、管道模式、惰性求值",
   "created": "2026-03-12",
   "language": "python",
+  "language_version": "3.3+",
   "tags": ["generator", "yield", "iterator", "lazy-evaluation"],
   "ai_participation": "full",
   "ai_model": "claude-3-sonnet",

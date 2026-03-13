@@ -3,6 +3,7 @@
   "description": "探索 C++ 智能指针：unique_ptr, shared_ptr, weak_ptr 以及 RAII 资源管理模式",
   "created": "2026-03-12",
   "language": "cpp",
+  "language_version": "C++11+",
   "tags": ["smart-pointer", "memory-management", "RAII", "modern-cpp"],
   "ai_participation": "full",
   "ai_model": "claude-3-sonnet",

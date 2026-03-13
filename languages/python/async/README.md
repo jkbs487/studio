@@ -1,6 +1,8 @@
-# Python 异步编程
+# Python 异步编程 `Python 3.7+`
 
 探索 Python 的异步编程特性和模式。
+
+> **语言版本**: Python 3.7 或更高（需要 `asyncio.run()` 支持）
 
 ## 包含内容
 

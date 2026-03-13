@@ -3,6 +3,7 @@
   "description": "探索 C++ 移动语义：右值引用、移动构造函数、移动赋值运算符、std::move 和 std::forward",
   "created": "2026-03-12",
   "language": "cpp",
+  "language_version": "C++11+",
   "tags": ["move-semantics", "rvalue-reference", "performance", "modern-cpp"],
   "ai_participation": "full",
   "ai_model": "claude-3-sonnet",

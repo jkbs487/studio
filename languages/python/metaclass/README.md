@@ -1,6 +1,8 @@
-# Python 元类
+# Python 元类 `Python 3.6+`
 
 探索 Python 元编程的高级特性。
+
+> **语言版本**: Python 3.6 或更高（需要 `__init_subclass__` 支持）
 
 ## 包含内容
 

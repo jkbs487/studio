@@ -8,11 +8,9 @@
 1. 研究各种编程语言的**最新特性**（C++20/23、Python 3.12+、Rust 2021等）
 2. 探索人机协作的编程模式
 
-**核心原则：始终使用各语言的最新稳定标准**
-
-- C++：使用 C++20，条件允许时使用 C++23 特性
-- Python：使用 Python 3.12+ 语法
-- Rust：使用 Rust 2021 Edition
+**核心原则**：
+- 代码应尽可能使用各语言的最新稳定标准
+- 版本要求根据实验实际使用的特性标注最低版本，而非统一最高版本
 
 ## 当前项目结构
 
@@ -90,6 +88,7 @@ C++ 顶层目录应包含：
   "description": "简短描述",
   "created": "2026-03-12",
   "language": "python",
+  "language_version": "3.10+",
   "tags": ["decorator", "meta-programming"],
   "ai_participation": "full|partial|none",
   "ai_model": "claude-3-sonnet|gpt-4|...",
@@ -105,10 +104,42 @@ C++ 顶层目录应包含：
 | description | 是 | 实验描述 |
 | created | 是 | 创建日期 YYYY-MM-DD |
 | language | 是 | 编程语言 |
+| language_version | 是 | 语言版本要求（如 "C++20"、"3.10+"） |
 | tags | 是 | 标签数组 |
 | ai_participation | 是 | AI参与程度：full/partial/none |
 | ai_model | 否 | 使用的AI模型 |
 | source | 是 | 代码来源：human/ai/hybrid |
+
+### 语言版本标注规则
+
+**核心原则：根据实验实际使用的特性标注最低版本要求**
+
+每个实验的版本要求应基于代码中实际使用的语言特性，而不是统一使用最高版本。
+
+#### Python 版本标注参考
+
+| 实验类型 | 最低版本 | 关键特性 |
+|----------|----------|----------|
+| 基础特性 | 3.3+ | `yield from` |
+| 元编程 | 3.6+ | `__init_subclass__` |
+| 异步编程 | 3.7+ | `asyncio.run()` |
+| 类型增强 | 3.10+ | `ParamSpec`、`None` 类型提示 |
+| 新语法 | 3.12+ | match-case、f-string 增强等 |
+
+#### C++ 版本标注参考
+
+| 实验类型 | 最低版本 | 关键特性 |
+|----------|----------|----------|
+| 基础现代特性 | C++11 | 右值引用、移动语义、智能指针 |
+| 并发 | C++11/17 | 线程、原子操作、scoped_lock |
+| Lambda | C++14 | 泛型 Lambda |
+| 新特性 | C++20 | Concepts、Ranges、协程 |
+
+#### 标注位置
+
+1. **README.md 标题**: `# 实验名称 \`语言版本\``（如 `# Python 装饰器 \`Python 3.10+\``）
+2. **README.md 开头**: 添加 `> **语言版本**: xxx` 标注
+3. **meta.json**: `language_version` 字段
 
 ## 工具使用
 

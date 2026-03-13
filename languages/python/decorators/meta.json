@@ -3,6 +3,7 @@
   "description": "探索 Python 装饰器的各种用法：函数装饰器、类装饰器、带参数的装饰器、装饰器链等",
   "created": "2026-03-12",
   "language": "python",
+  "language_version": "3.10+",
   "tags": ["decorator", "meta-programming", "advanced"],
   "ai_participation": "full",
   "ai_model": "claude-3-sonnet",

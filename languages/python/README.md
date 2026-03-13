@@ -2,9 +2,12 @@
 
 本目录包含 Python 语言特性的实验和研究。
 
+> **版本说明**: 各实验根据实际使用的特性标注最低版本要求，详见各实验列表
+
 ## 实验列表
 
-### 装饰器 (decorators)
+### 装饰器 (decorators) `Python 3.10+`
+
 探索 Python 装饰器的各种用法和技巧。
 
 **内容：**
@@ -21,7 +24,8 @@ python languages/python/decorators/main.py
 
 ---
 
-### 异步编程 (async)
+### 异步编程 (async) `Python 3.7+`
+
 探索 Python 的异步编程模型。
 
 **运行：**
@@ -31,7 +35,8 @@ python languages/python/async/main.py
 
 ---
 
-### 元类 (metaclass)
+### 元类 (metaclass) `Python 3.6+`
+
 探索 Python 元类和元编程。
 
 **运行：**
@@ -41,7 +46,8 @@ python languages/python/metaclass/main.py
 
 ---
 
-### 生成器 (generators)
+### 生成器 (generators) `Python 3.3+`
+
 探索 Python 生成器和迭代器。
 
 **运行：**

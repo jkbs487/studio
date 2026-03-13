@@ -3,6 +3,7 @@
   "description": "探索 C++ 模板系统：函数模板、类模板、模板特化、SFINAE等高级特性",
   "created": "2026-03-12",
   "language": "cpp",
+  "language_version": "C++20",
   "tags": ["template", "meta-programming", "generic-programming"],
   "ai_participation": "full",
   "ai_model": "claude-3-sonnet",
