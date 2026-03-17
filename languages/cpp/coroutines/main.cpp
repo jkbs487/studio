@@ -89,7 +89,14 @@ struct Generator {
         if (!handle) return false;
         if (handle.done()) return false;
         handle.resume();
-        return !handle.done();
+        if (handle.done()) {
+            // 协程已完成，检查是否有异常
+            if (handle.promise().exception) {
+                std::rethrow_exception(handle.promise().exception);
+            }
+            return false;
+        }
+        return true;
     }
 
     T& current() { return handle.promise().value; }
@@ -175,8 +182,9 @@ struct SyncSleepAwaitable {
 
     bool await_ready() const { return false; }
 
-    void await_suspend(std::coroutine_handle<>) const {
+    void await_suspend(std::coroutine_handle<> h) const {
         std::this_thread::sleep_for(duration);
+        h.resume();  // 手动恢复协程
     }
 
     void await_resume() const {}
@@ -184,13 +192,35 @@ struct SyncSleepAwaitable {
 
 // 立即执行的 Task (使用 suspend_never)
 struct ImmediateTask {
+    struct promise_type;
+    std::coroutine_handle<promise_type> handle;
+
     struct promise_type {
-        ImmediateTask get_return_object() { return {}; }
+        ImmediateTask get_return_object() {
+            auto h = std::coroutine_handle<promise_type>::from_promise(*this);
+            return ImmediateTask{h};
+        }
         std::suspend_never initial_suspend() { return {}; }  // 立即开始
         std::suspend_always final_suspend() noexcept { return {}; }
         void return_void() {}
         void unhandled_exception() { std::terminate(); }
     };
+
+    ImmediateTask(std::coroutine_handle<promise_type> h) : handle(h) {}
+    ~ImmediateTask() { if (handle) handle.destroy(); }
+    ImmediateTask(const ImmediateTask&) = delete;
+    ImmediateTask& operator=(const ImmediateTask&) = delete;
+    ImmediateTask(ImmediateTask&& other) noexcept : handle(other.handle) {
+        other.handle = nullptr;
+    }
+    ImmediateTask& operator=(ImmediateTask&& other) noexcept {
+        if (this != &other) {
+            if (handle) handle.destroy();
+            handle = other.handle;
+            other.handle = nullptr;
+        }
+        return *this;
+    }
 };
 
 ImmediateTask syncAsyncTask() {
@@ -201,7 +231,8 @@ ImmediateTask syncAsyncTask() {
 
 void coAwaitDemo() {
     std::cout << "\n--- co_await 自定义 awaitable ---" << std::endl;
-    syncAsyncTask();
+    auto task = syncAsyncTask();
+    // Task 会在这里析构，自动清理协程
 }
 
 // ============================================================
@@ -369,30 +400,68 @@ void coroutineChainDemo() {
 }
 
 // ============================================================
-// 演示9: lazy 初始化协程
+// 演示9: lazy 初始化协程（惰性执行）
 // ============================================================
 
 struct LazyTask {
+    struct promise_type;
+    std::coroutine_handle<promise_type> handle;
+
     struct promise_type {
-        LazyTask get_return_object() { return LazyTask{}; }
-        std::suspend_never initial_suspend() { return {}; }  // 不暂停，立即开始
+        LazyTask get_return_object() {
+            auto h = std::coroutine_handle<promise_type>::from_promise(*this);
+            return LazyTask{h};
+        }
+        std::suspend_always initial_suspend() { return {}; }  // 先暂停，不立即执行
         std::suspend_always final_suspend() noexcept { return {}; }
         void return_void() {}
         void unhandled_exception() { std::terminate(); }
     };
+
+    LazyTask(std::coroutine_handle<promise_type> h) : handle(h) {}
+    ~LazyTask() { if (handle) handle.destroy(); }
+    LazyTask(const LazyTask&) = delete;
+    LazyTask& operator=(const LazyTask&) = delete;
+    LazyTask(LazyTask&& other) noexcept : handle(other.handle) {
+        other.handle = nullptr;
+    }
+    LazyTask& operator=(LazyTask&& other) noexcept {
+        if (this != &other) {
+            if (handle) handle.destroy();
+            handle = other.handle;
+            other.handle = nullptr;
+        }
+        return *this;
+    }
+
+    // 手动恢复执行
+    void resume() {
+        if (handle && !handle.done()) {
+            handle.resume();
+        }
+    }
+
+    bool done() const { return !handle || handle.done(); }
 };
 
 LazyTask lazyCoroutine() {
-    std::cout << "lazy 协程: 开始" << std::endl;
-    std::cout << "lazy 协程: 结束" << std::endl;
+    std::cout << "lazy 协程: 开始执行" << std::endl;
+    std::cout << "lazy 协程: 结束执行" << std::endl;
     co_return;
 }
 
 void lazyCoroutineDemo() {
-    std::cout << "\n--- Lazy 初始化协程 ---" << std::endl;
-    std::cout << "创建协程任务..." << std::endl;
+    std::cout << "\n--- Lazy 初始化协程（惰性执行） ---" << std::endl;
+    
+    std::cout << "1. 创建协程任务..." << std::endl;
     auto task = lazyCoroutine();
-    std::cout << "协程已执行完毕（因为 initial_suspend 返回 suspend_never）" << std::endl;
+    
+    std::cout << "2. 协程已创建，但尚未执行（因为是 lazy）" << std::endl;
+    
+    std::cout << "3. 手动调用 resume()..." << std::endl;
+    task.resume();
+    
+    std::cout << "4. 协程执行完毕" << std::endl;
 }
 
 // ============================================================

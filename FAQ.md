@@ -287,6 +287,65 @@ co_yield i;
 
 ### C++ 协程运行时问题
 
+#### 协程输出不完整
+
+**问题：** 协程中 `co_await` 后的代码没有执行
+
+**原因：** 自定义 awaitable 的 `await_suspend` 返回值或行为不正确
+
+**解决方案：**
+
+```cpp
+// ❌ 错误：await_suspend 返回 void，协程暂停后不会自动恢复
+void await_suspend(std::coroutine_handle<>) const {
+    std::this_thread::sleep_for(duration);
+}
+
+// ✅ 正确：手动恢复协程
+void await_suspend(std::coroutine_handle<> h) const {
+    std::this_thread::sleep_for(duration);
+    h.resume();  // 手动恢复
+}
+```
+
+**关键点：**
+- `await_suspend` 返回 `void`：协程暂停，需要手动 resume
+- `await_suspend` 返回 `true`：协程暂停
+- `await_suspend` 返回 `false`：协程立即恢复
+
+#### 协程异常未被捕获
+
+**问题：** 协程中抛出的异常没有被 `try-catch` 捕获
+
+**原因：** Generator 的 `next()` 方法没有检查并重新抛出异常
+
+**解决方案：**
+
+```cpp
+// ❌ 错误：next() 不检查异常
+bool next() {
+    handle.resume();
+    return !handle.done();
+}
+
+// ✅ 正确：检查并重新抛出异常
+bool next() {
+    handle.resume();
+    if (handle.done()) {
+        if (handle.promise().exception) {
+            std::rethrow_exception(handle.promise().exception);
+        }
+        return false;
+    }
+    return true;
+}
+```
+
+**说明：**
+- 协程异常通过 `unhandled_exception()` 存储在 `std::exception_ptr` 中
+- 使用 `std::rethrow_exception()` 重新抛出原始异常
+- `std::exception_ptr` 和 `std::rethrow_exception` 是 C++11 特性
+
 #### 协程句柄未销毁
 
 **问题：** 程序运行正常，但存在内存泄漏
@@ -315,6 +374,127 @@ struct Generator {
     }
 };
 ```
+
+#### Lazy vs Eager 协程
+
+**问题：** 不理解协程何时开始执行
+
+**原因：** 混淆了 `suspend_always` 和 `suspend_never` 的行为
+
+**解决方案：**
+
+```cpp
+// Lazy（惰性）协程 - 调用时不执行
+struct LazyTask {
+    struct promise_type {
+        std::suspend_always initial_suspend() { return {}; }  // 先暂停
+        // ...
+    };
+    
+    void resume() { handle.resume(); }  // 手动恢复
+};
+
+// Eager（急切）协程 - 调用时立即执行
+struct EagerTask {
+    struct promise_type {
+        std::suspend_never initial_suspend() { return {}; }  // 立即开始
+        // ...
+    };
+};
+```
+
+| 类型 | `initial_suspend()` | 行为 |
+|------|---------------------|------|
+| Lazy | `suspend_always` | 创建时不执行，需要手动 `resume()` |
+| Eager | `suspend_never` | 创建时立即执行 |
+
+#### promise_type 必需成员
+
+**问题：** 编写协程时不知道 `promise_type` 需要哪些成员
+
+**必需成员：**
+
+```cpp
+struct promise_type {
+    // 必需：创建返回对象
+    ReturnObject get_return_object();
+    
+    // 必需：协程开始时的行为
+    auto initial_suspend();  // 返回 suspend_always 或 suspend_never
+    
+    // 必需：协程结束时的行为
+    auto final_suspend() noexcept;
+    
+    // 必需（二选一）：协程返回值
+    void return_void();      // 用于 co_return; 或无返回语句
+    void return_value(T);    // 用于 co_return value;
+    
+    // 必需：异常处理
+    void unhandled_exception();
+    
+    // 可选：支持 co_yield
+    auto yield_value(T);     // 返回 suspend_always 或类似类型
+};
+```
+
+**编译错误示例：**
+```cpp
+// 缺少 get_return_object
+error: no member named 'get_return_object' in 'promise_type'
+
+// 缺少 yield_value（使用 co_yield 时）
+error: no member named 'yield_value' in 'promise_type'
+```
+
+#### 协程返回对象机制
+
+**问题：** 为什么协程函数没有 `return` 语句，但能返回指定类型？
+
+**原因：** 协程的返回值由 `promise_type::get_return_object()` 创建
+
+**编译器生成的伪代码：**
+```cpp
+ReturnObject coroutineFunction() {
+    // 编译器自动生成：
+    auto& promise = /* 创建 promise */;
+    ReturnObject result = promise.get_return_object();  // ← 创建返回值
+    co_await promise.initial_suspend();
+    // ... 协程体 ...
+    return result;  // 返回由 promise 创建的对象
+}
+```
+
+**关键点：**
+- 协程返回类型决定了查找哪个 `promise_type`
+- `get_return_object()` 负责创建返回对象
+- 协程体内不需要显式 `return`
+
+#### Generator vs OptionalGenerator
+
+**问题：** 两种生成器有什么区别？
+
+**Generator（两步模式）：**
+```cpp
+// next() 返回 bool，需要调用 current() 获取值
+while (gen.next()) {
+    std::cout << gen.current();
+}
+```
+
+**OptionalGenerator（一步模式）：**
+```cpp
+// next() 直接返回 std::optional<T>
+while (auto val = gen.next()) {
+    std::cout << *val;
+}
+```
+
+| 特性 | Generator | OptionalGenerator |
+|------|-----------|-------------------|
+| `next()` 返回 | `bool` | `std::optional<T>` |
+| 获取值 | `current()` | 解引用 `*val` |
+| 调用次数 | 两步 | 一步 |
+| 风格 | 传统迭代器 | 现代 functional |
 
 ### C++ 协程编译器支持
 

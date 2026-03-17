@@ -490,3 +490,76 @@ languages/cpp/
 | 取消操作 | `context.WithCancel` |
 | 原子计数 | `sync/atomic` |
 
+## 实践案例：C++ 协程编程经验总结
+
+### 核心概念
+
+**协程返回对象机制：**
+- 协程函数的返回类型决定查找哪个 `promise_type`
+- `promise_type::get_return_object()` 负责创建返回对象
+- 协程体内不需要显式 `return`，返回值由编译器自动生成
+
+**Lazy vs Eager 协程：**
+- Lazy：`initial_suspend()` 返回 `suspend_always`，创建时不执行，需要手动 `resume()`
+- Eager：`initial_suspend()` 返回 `suspend_never`，创建时立即执行
+
+### 关键经验
+
+**协程输出不完整：**
+- `await_suspend` 返回 `void` 时，协程暂停后不会自动恢复
+- 需要在 `await_suspend` 中手动调用 `h.resume()` 恢复协程
+- 或让 `await_suspend` 返回 `false` 让协程立即恢复
+
+**协程异常处理：**
+- 异常通过 `unhandled_exception()` 存储在 `std::exception_ptr` 中
+- Generator 的 `next()` 方法需要检查并重新抛出异常
+- 使用 `std::rethrow_exception()` 重新抛出原始异常（C++11 特性）
+
+**协程生命周期管理：**
+- 使用 RAII 包装协程句柄，确保析构时调用 `destroy()`
+- 禁止复制，允许移动语义
+- Task 对象必须在协程执行期间保持有效
+
+**promise_type 必需成员：**
+```cpp
+struct promise_type {
+    ReturnObject get_return_object();  // 必需
+    auto initial_suspend();            // 必需
+    auto final_suspend() noexcept;     // 必需
+    void return_void();                // 必需（或 return_value）
+    void unhandled_exception();        // 必需
+    auto yield_value(T);               // 可选（使用 co_yield 时）
+};
+```
+
+### 设计模式
+
+**Generator vs OptionalGenerator：**
+- Generator：`next()` 返回 `bool`，需要调用 `current()` 获取值（传统迭代器风格）
+- OptionalGenerator：`next()` 返回 `std::optional<T>`，一步获取值和状态（现代 functional 风格）
+
+**自定义 awaitable：**
+```cpp
+struct SyncSleepAwaitable {
+    std::chrono::milliseconds duration;
+    
+    bool await_ready() const { return false; }
+    void await_suspend(std::coroutine_handle<> h) const {
+        std::this_thread::sleep_for(duration);
+        h.resume();  // 手动恢复协程
+    }
+    void await_resume() const {}
+};
+```
+
+### 最佳实践总结
+
+| 场景 | 推荐方案 |
+|------|----------|
+| 生成器模式 | `Generator<T>` 或 `OptionalGenerator<T>` |
+| 异步任务 | `Task` + `co_await` |
+| 惰性执行 | Lazy Task（`suspend_always`） |
+| 立即执行 | Eager Task（`suspend_never`） |
+| 异常传递 | `std::exception_ptr` + `std::rethrow_exception` |
+| 资源管理 | RAII 包装协程句柄 |
+

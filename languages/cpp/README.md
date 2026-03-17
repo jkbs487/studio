@@ -185,12 +185,18 @@ cmake --open build
 
 **内容：**
 - 协程基础 - 协程函数、协程句柄、promise_type
-- `co_await` - 等待异步操作
+- `co_await` - 等待异步操作、自定义 awaitable
 - `co_yield` - 产生值和生成器模式
 - `co_return` - 从协程返回值
 - `suspend_always`/`suspend_never` - 协程暂停策略
-- 异步生成器和 Task 框架
-- 协程与标准库的结合
+- Lazy vs Eager 协程 - 惰性执行 vs 立即执行
+- Generator vs OptionalGenerator - 两种生成器设计模式
+- 异常处理 - 协程中的异常传递
+
+**关键概念：**
+- 协程返回值由 `promise_type::get_return_object()` 创建
+- `initial_suspend()` 决定协程是立即执行还是惰性执行
+- 使用 RAII 包装协程句柄，避免内存泄漏
 
 **运行：**
 ```bash
