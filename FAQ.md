@@ -4,11 +4,199 @@
 
 ## 目录
 
+- [Python 相关](#python-相关)
 - [Go 相关](#go-相关)
 - [C++ 相关](#c-相关)
 - [编译和构建](#编译和构建)
 - [代码问题](#代码问题)
 - [性能对比实验](#性能对比实验)
+
+---
+
+## Python 相关
+
+### Python 版本要求
+
+**问题：** 运行 Python 代码时提示语法错误
+
+**原因：** 项目使用 Python 3.10+ 的特性（如 match/case、dataclass 参数）
+
+**解决方案：**
+```bash
+# 检查 Python 版本
+python3 --version
+
+# 建议使用 3.10 或更高版本
+# Ubuntu/Debian:
+sudo apt install python3.11
+
+# macOS:
+brew install python@3.11
+```
+
+### Python 未找到
+
+**问题：** `python: command not found`
+
+**解决方案：**
+
+```bash
+# macOS
+brew install python3
+
+# Linux
+sudo apt install python3
+
+# 或使用 pyenv 管理多版本
+brew install pyenv
+pyenv install 3.11
+pyenv global 3.11
+```
+
+### 虚拟环境使用
+
+**问题：** 依赖冲突或全局环境污染
+
+**解决方案：**
+
+```bash
+# 创建虚拟环境
+python3 -m venv venv
+
+# 激活
+source venv/bin/activate  # Linux/macOS
+venv\Scripts\activate    # Windows
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 停用
+deactivate
+```
+
+### Python 异步编程注意事项
+
+**问题：** 异步函数未正确执行
+
+**原因：** 未使用 `await` 或 `asyncio.run()`
+
+**解决方案：**
+
+```python
+# ❌ 错误：异步函数未等待
+async def fetch_data():
+    return await get_data()
+
+result = fetch_data()  # 返回协程对象，不是结果
+
+# ✅ 正确：使用 asyncio.run
+async def main():
+    result = await fetch_data()
+    print(result)
+
+asyncio.run(main())
+
+# 或使用 asyncio.get_event_loop()
+loop = asyncio.get_event_loop()
+result = loop.run_until_complete(fetch_data())
+```
+
+### 类型提示常见错误
+
+**问题：** 类型提示不生效或运行时错误
+
+**原因：** Python 类型提示是静态检查，不影响运行时
+
+**解决方案：**
+
+```python
+# 类型提示不会在运行时强制类型
+def greet(name: str) -> str:
+    return f"Hello, {name}"
+
+# 传入错误类型不会报错，只会有 IDE 警告
+result = greet(123)  # 运行正常，但 IDE 会警告
+
+# 如需运行时检查，使用 typing 或 pydantic
+from pydantic import BaseModel
+
+class Person(BaseModel):
+    name: str
+    age: int
+
+# 运行时自动验证
+person = Person(name="Alice", age="25")  # 会报错，类型不匹配
+```
+
+### 装饰器执行顺序
+
+**问题：** 装饰器执行结果与预期不符
+
+**原因：** 装饰器是从下往上执行的
+
+**解决方案：**
+
+```python
+def decorator_a(func):
+    print("decorator_a")
+    return func
+
+def decorator_b(func):
+    print("decorator_b")
+    return func
+
+@decorator_a
+@decorator_b
+def my_func():
+    pass
+
+# 输出:
+# decorator_b  # 先执行
+# decorator_a  # 后执行
+# 效果等同于: decorator_a(decorator_b(my_func))
+```
+
+### 生成器内存效率
+
+**问题：** 处理大数据时内存不足
+
+**原因：** 使用列表而非生成器
+
+**解决方案：**
+
+```python
+# ❌ 错误：一次性加载所有数据
+def get_items():
+    return [item for item in range(1000000)]
+
+# ✅ 正确：使用生成器
+def get_items():
+    for item in range(1000000):
+        yield item
+
+# ✅ 或使用生成器表达式
+items = (item for item in range(1000000))
+```
+
+### match/case 使用注意
+
+**问题：** match/case 在 Python 3.10 以下报错
+
+**错误信息：**
+```
+SyntaxError: invalid syntax
+```
+
+**解决方案：**
+```bash
+# 确保使用 Python 3.10+
+python3 --version  # 应该是 3.10 或更高
+
+# 或使用兼容写法
+if isinstance(x, int):
+    # old style matching
+    pass
+```
 
 ---
 
@@ -109,19 +297,6 @@ consumerWg.Wait()
 - 生产者完成后才能关闭 channel
 - 关闭 channel 后消费者才能退出
 - 使用两个独立的 WaitGroup 分别等待生产者和消费者
-
-### Go 编译运行
-
-**快速运行：**
-```bash
-go run languages/go/goroutines/main.go
-```
-
-**编译：**
-```bash
-go build -o output languages/go/goroutines/main.go
-./output
-```
 
 ### Go 通道遍历注意事项
 
@@ -707,7 +882,9 @@ target_link_libraries(your_target Threads::Threads)
 
 ---
 
-## 代码问题
+## 代码问题（通用）
+
+> 以下问题跨越多种语言，或涉及通用编程概念
 
 ### 资源泄漏警告
 
@@ -771,118 +948,16 @@ T process(T value) {
 
 **问题：** 性能测试结果显示不符合预期（如拷贝比移动快）
 
-**常见原因：**
-
-1. **测试条件不公平**
-   - 不同测试包含不同数量的构造函数调用
-   - 一个测试循环10000次，另一个只循环1次
-
-2. **隐藏的额外开销**
-   - 测试包含了非目标操作的时间（如对象创建）
-   - 没有排除I/O输出时间
-
-3. **测试方法不当**
-   - 测试人造场景而非真实使用场景
-   - 循环次数太少或数据量太小
+**常见原因：** 测试条件不公平、测试方法不当、循环次数或数据量不足、编译器优化掩盖真实性能
 
 **正确做法：**
-
-```cpp
-// ❌ 错误示例 - 测试不公平
-void bad_test() {
-    BigData temp("Test", 100);  // 只创建1次
-    for (int i = 0; i < 10000; ++i) {
-        BigData copy = temp;  // 10000次拷贝
-    }
-
-    for (int i = 0; i < 10000; ++i) {
-        BigData data("Test", 100);  // 10000次构造！
-        BigData moved = std::move(data);
-    }
-    // 结果：拷贝更快，因为少调用了9999次构造函数
-}
-
-// ✅ 正确示例 - 测试真实场景
-void good_test() {
-    // 测试1: vector扩容时的拷贝开销
-    auto start = std::chrono::high_resolution_clock::now();
-    {
-        std::vector<BigData> vec;
-        for (int i = 0; i < 10000; ++i) {
-            vec.push_back(BigData("Data", 10000));  // 扩容时触发拷贝
-        }
-    }
-    auto copy_time = std::chrono::high_resolution_clock::now() - start;
-
-    // 测试2: 预分配+移动
-    start = std::chrono::high_resolution_clock::now();
-    {
-        std::vector<BigData> vec;
-        vec.reserve(10000);  // 预分配避免扩容
-        for (int i = 0; i < 10000; ++i) {
-            vec.push_back(BigData("Data", 10000));  // 移动，无拷贝
-        }
-    }
-    auto move_time = std::chrono::high_resolution_clock::now() - start;
-    // 结果：移动更快，符合预期
-}
-```
-
-**最佳实践：**
-- ✅ 只对比要测量的操作，确保测试条件公平
+- ✅ 确保测试条件公平（相同的数据规模、循环次数）
 - ✅ 测试真实使用场景（如vector操作）
-- ✅ 使用静默模式减少输出干扰
 - ✅ 循环次数和数据量足够大以体现差异
 - ✅ 多次运行取平均值
-- ✅ 测量前热身，避免冷启动影响
+- ✅ 使用 `-O2` 或更高优化级别
 
-### 移动语义性能测试的局限性
-
-**问题：** 某些性能测试结果显示移动语义提升不明显，甚至没有提升
-
-**常见原因：**
-
-1. **编译器优化掩盖移动语义效果**
-   - **RVO (返回值优化)**：编译器自动优化函数返回，避免拷贝/移动
-   - **SSO (小字符串优化)**：小字符串（<16字节）存储在栈上，移动无优势
-   - **字符串拼接优化**：`std::string` 的 `operator+` 已进行优化，手动 `std::move` 收益有限
-   - **copy elision (拷贝省略)**：编译器可能直接优化掉某些拷贝/移动操作
-
-2. **测试方法不当**
-   - 测试对象太小（移动操作本身有开销，小对象移动提升不明显）
-   - 测试场景不合适（在已经优化的操作上测试）
-   - 对比了错误的操作（如对比 `拷贝已有对象` vs `emplace_back构造`，而不是对比 `push_back(临时对象)` vs `emplace_back`）
-
-3. **初始化方式影响性能**
-   - `std::copy` 内部可能使用 `memcpy`，批量操作，效率高
-   - `for` 循环逐个初始化，逐个操作，效率低
-   - 拷贝不总是比构造慢，取决于初始化方式
-
-**实际测试结果：**
-
-| 测试 | 结果 | 原因 |
-|------|------|------|
-| 拷贝 vs 移动 | 19x 提升 ✅ | 移动只复制指针，拷贝需要深拷贝 |
-| 传值 vs 传引用 | 极大提升 ✅ | 避免大对象的拷贝 |
-| vector 扩容 | 效果有限 ⚠️ | 移动扩容本身很快 |
-| emplace_back | 1.2x 提升 ✅ | 避免临时对象的创建 |
-| std::swap | 1.7x 提升 ⚠️ | 避免深拷贝但仍有开销 |
-| 字符串拼接 | 无提升 ⚠️ | 编译器已优化 |
-
-**重要发现：**
-
-- **emplace_back 测试问题**：最初对比 `push_back(已有对象拷贝)` vs `emplace_back(构造)`，结果显示拷贝更快
-- **原因**：拷贝构造使用 `std::copy` (memcpy，批量操作)，带参数构造使用 `for` 循环逐个初始化
-- **正确对比**：`push_back(临时对象)` vs `emplace_back`，结果显示 emplace_back 稍快（1.2x）
-- **核心结论**：拷贝不总是慢，取决于初始化方式；emplace_back 的优势是避免临时对象
-
-**结论：**
-- ✅ 移动语义对大对象（>1KB）效果显著
-- ✅ 传递大对象参数时，优先使用 const& 引用
-- ⚠️ 编译器优化可能掩盖移动语义优势
-- ⚠️ 设计性能测试时，要对比相同语义的操作
-- 📌 拷贝构造 (std::copy) 可能比带参数构造 (for循环) 快
-- 📌 emplace_back 应该对比 `push_back(临时对象)`，而非 `push_back(已有对象)`
+**注意：** 编译器优化（RVO、SSO、copy elision）可能掩盖移动语义和拷贝的性能差异
 
 ### emplace_back 使用建议
 
@@ -907,90 +982,13 @@ vec.push_back(std::move(obj));   // 移动（obj 不再使用）
 
 ### 并发编程常见问题
 
-#### 线程对象未 join 或 detach
+**线程对象未 join 或 detach：** 线程对象在销毁前必须调用 `join()` 或 `detach()`
 
-**错误信息：**
-```
-terminate called without an active exception
-```
+**死锁：** 使用 `std::scoped_lock` 或 `std::lock` 确保多个 mutex 按相同顺序加锁
 
-**原因：** 线程对象在销毁前未调用 `join()` 或 `detach()`
+**竞争条件：** 使用互斥锁 `std::mutex` 或原子操作 `std::atomic`
 
-**解决方案：**
-```cpp
-// 方案1：join 等待结束
-std::thread t(func);
-t.join();  // 必须调用
-
-// 方案2：detach 分离
-std::thread t(func);
-t.detach();  // 分离后后台运行
-```
-
-#### 死锁
-
-**问题：** 程序卡死，多个线程互相等待
-
-**原因：** 多个 mutex 按不同顺序加锁
-
-**解决方案：**
-```cpp
-// ❌ 错误：不同线程按不同顺序加锁
-void thread1() {
-    std::lock_guard<std::mutex> l1(m1);
-    std::lock_guard<std::mutex> l2(m2);
-}
-
-void thread2() {
-    std::lock_guard<std::mutex> l2(m2);  // 顺序相反！
-    std::lock_guard<std::mutex> l1(m1);
-}
-
-// ✅ 正确：使用 scoped_lock
-std::scoped_lock lock(m1, m2);
-
-// ✅ 正确：使用 std::lock
-std::lock(m1, m2);
-std::lock_guard<std::mutex> l1(m1, std::adopt_lock);
-std::lock_guard<std::mutex> l2(m2, std::adopt_lock);
-```
-
-#### 竞争条件
-
-**问题：** 多线程访问共享数据，结果不确定
-
-**解决方案：**
-```cpp
-// 使用互斥锁
-std::mutex mtx;
-int counter = 0;
-
-void increment() {
-    std::lock_guard<std::mutex> lock(mtx);
-    ++counter;
-}
-
-// 或使用原子操作
-std::atomic<int> counter(0);
-void increment() {
-    counter.fetch_add(1);
-}
-```
-
-#### 条件变量虚假唤醒
-
-**问题：** 线程被意外唤醒
-
-**原因：** 条件变量的 `wait()` 可能被虚假唤醒
-
-**解决方案：**
-```cpp
-// ✅ 使用带谓词的 wait
-cv.wait(lock, [] { return ready; });
-
-// ❌ 错误：可能虚假唤醒
-cv.wait(lock);
-```
+**条件变量虚假唤醒：** 使用带谓词的 `cv.wait(lock, predicate)` 而非 `cv.wait(lock)`
 
 ### Ranges 常见问题
 
@@ -1087,66 +1085,15 @@ cd experiments/benchmark
 ./run.sh clean
 ```
 
-### benchmark 编译失败
-
-**问题：** C++ 或 Go 编译失败
-
-**检查：**
-
-```bash
-# 检查 C++ 编译器
-g++ --version
-
-# 检查 Go 编译器
-go version
-
-# 检查 Python
-python3 --version
-```
-
 ### benchmark 结果不符合预期
 
 **问题：** 性能测试结果与文档不符
 
-**常见原因：**
-
-1. **编译优化级别不同**
-   - 确保使用 `-O2` 或更高优化级别
-   - Go 默认已优化，但可使用 `go build -ldflags="-s -w"`
-
-2. **硬件差异**
-   - 不同 CPU 架构结果差异很大
-   - ARM 和 x86 性能特性不同
-
-3. **后台进程干扰**
-   - 关闭其他程序再运行测试
-   - 多次运行取平均值
-
-4. **测试数据规模**
-   - 数据量太小无法体现差异
-   - 数据量太大可能触发系统限制
-
-**正确做法：**
-- ✅ 关闭其他程序，减少干扰
-- ✅ 多次运行取平均值
-- ✅ 使用 release 模式编译
-- ✅ 确保使用相同的编译优化级别
-
-### Python 未找到
-
-**问题：** `python: command not found`
-
-**解决方案：**
-
+参考 [性能测试常见错误](#性能测试常见错误) 部分的建议。检查编译器版本：
 ```bash
-# macOS
-brew install python3
-
-# Linux
-sudo apt install python3
-
-# 使用 python3 替代 python
-python3 main.py
+g++ --version
+go version
+python3 --version
 ```
 
 ---
