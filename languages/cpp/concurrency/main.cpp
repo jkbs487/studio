@@ -345,28 +345,95 @@ void threadPoolDemo() {
 // ============================================================================
 // 7. 死锁避免示例
 // ============================================================================
+
+// 演示死锁场景的全局 mutex
 std::mutex m1, m2;
+
+// 错误示范：交叉加锁导致死锁
+void wrongLockOrder(int threadId) {
+    if (threadId == 0) {
+        std::lock_guard<std::mutex> lock1(m1);
+        std::cout << "线程0: 持有 m1\n";
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::lock_guard<std::mutex> lock2(m2);  // 等待 m2
+        std::cout << "线程0: 持有 m2\n";
+    } else {
+        std::lock_guard<std::mutex> lock2(m2);
+        std::cout << "线程1: 持有 m2\n";
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::lock_guard<std::mutex> lock1(m1);  // 等待 m1
+        std::cout << "线程1: 持有 m1\n";
+    }
+}
+
+// 方案1: scoped_lock 一次性锁定多个 mutex (C++17)
+void correctLockScopedLock(int threadId) {
+    std::scoped_lock lock(m1, m2);  // C++17: 一次性获取多个锁，避免死锁
+    if (threadId == 0) {
+        std::cout << "线程0: 持有 m1 和 m2\n";
+    } else {
+        std::cout << "线程1: 持有 m1 和 m2\n";
+    }
+}
+
+// 方案2: std::lock 避免死锁 + adopt_lock 接管所有权
+void correctLockStdLock(int threadId) {
+    std::lock(m1, m2);  // 用死锁避免算法锁定
+    std::lock_guard<std::mutex> lock1(m1, std::adopt_lock);
+    std::lock_guard<std::mutex> lock2(m2, std::adopt_lock);
+    if (threadId == 0) {
+        std::cout << "线程0: 持有 m1 和 m2\n";
+    } else {
+        std::cout << "线程1: 持有 m1 和 m2\n";
+    }
+}
+
+// 方案3: 锁排序 - 总是按固定顺序加锁
+void correctLockOrdered(int threadId) {
+    std::lock_guard<std::mutex> lock1(m1);  // 总是先锁 m1
+    std::lock_guard<std::mutex> lock2(m2);  // 再锁 m2
+    if (threadId == 0) {
+        std::cout << "线程0: 持有 m1 和 m2\n";
+    } else {
+        std::cout << "线程1: 持有 m1 和 m2\n";
+    }
+}
 
 void deadlockExample() {
     std::cout << "\n========== 7. 死锁避免 ==========\n";
 
-    // 方案1: scoped_lock 一次性锁定多个 mutex (C++17)
+    // 演示死锁场景（实际运行会卡住，注释掉仅作说明）
+    std::cout << "\n--- 错误示范: 交叉加锁导致死锁 ---\n";
+    std::cout << "线程0: m1 -> m2\n";
+    std::cout << "线程1: m2 -> m1\n";
+    std::cout << "如果两个线程同时运行，会互相等待对方释放锁 -> 死锁\n";
+
+    // 方案1: scoped_lock
+    std::cout << "\n--- 方案1: std::scoped_lock (C++17) ---\n";
     {
-        std::scoped_lock lock(m1, m2);  // C++17 scoped_lock，自动解锁多个
-        std::cout << "使用 scoped_lock 锁定多个 mutex\n";
+        std::thread t1(correctLockScopedLock, 0);
+        std::thread t2(correctLockScopedLock, 1);
+        t1.join();
+        t2.join();
     }
 
-    // 方案2: std::lock 避免死锁 + adopt_lock 接管所有权
+    // 方案2: std::lock + adopt_lock
+    std::cout << "\n--- 方案2: std::lock + adopt_lock ---\n";
     {
-        // std::lock 会使用避免死锁的算法锁定所有 mutex
-        std::lock(m1, m2);
-        std::lock_guard<std::mutex> lock1(m1, std::adopt_lock);
-        std::lock_guard<std::mutex> lock2(m2, std::adopt_lock);
-        std::cout << "使用 std::lock + adopt_lock\n";
+        std::thread t1(correctLockStdLock, 0);
+        std::thread t2(correctLockStdLock, 1);
+        t1.join();
+        t2.join();
     }
 
-    // 方案3: 锁排序 - 总是按固定顺序加锁
-    std::cout << "锁排序避免死锁\n";
+    // 方案3: 锁排序
+    std::cout << "\n--- 方案3: 锁排序 ---\n";
+    {
+        std::thread t1(correctLockOrdered, 0);
+        std::thread t2(correctLockOrdered, 1);
+        t1.join();
+        t2.join();
+    }
 }
 
 // ============================================================================
