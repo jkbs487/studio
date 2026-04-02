@@ -35,6 +35,8 @@
 | lambda | C++14 | 泛型 Lambda |
 | templates | C++20 | Concepts |
 | ranges | C++20 | Ranges 库 |
+| coroutines | C++20 | 协程 (co_await/co_yield) |
+| format | C++20 | std::format 格式化库 |
 
 ### Go 实验版本要求
 
@@ -72,7 +74,8 @@ studio/
 │   │   ├── move-semantics/# 移动语义
 │   │   ├── concurrency/  # 并发编程
 │   │   ├── ranges/       # Ranges (C++20)
-│   │   └── coroutines/   # 协程 (C++20)
+│   │   ├── coroutines/   # 协程 (C++20)
+│   │   └── format/       # 格式化库 (C++20)
 │   └── go/               # Go 实验
 │       └── goroutines/   # 并发编程
 ├── experiments/          # 综合实验

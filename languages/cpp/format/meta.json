@@ -1,0 +1,7 @@
+{
+  "name": "format",
+  "description": "C++20 std::format 格式化库实验",
+  "category": "library",
+  "cxx_standard": "C++20",
+  "tags": ["format", "string", "output"]
+}
