@@ -1,0 +1,11 @@
+{
+  "name": "cpp-std-span",
+  "description": "探索 C++20 std::span 视图容器：零拷贝视图、函数参数、子视图、与 STL 算法集成",
+  "created": "2026-04-02",
+  "language": "cpp",
+  "language_version": "C++20",
+  "tags": ["span", "view", "container", "zero-copy", "c++20", "modern-cpp"],
+  "ai_participation": "full",
+  "ai_model": "claude-3-sonnet",
+  "source": "ai"
+}

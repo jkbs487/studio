@@ -226,6 +226,31 @@ cmake --open build
 
 ---
 
+### Span (std-span) `C++20`
+
+探索 C++20 引入的 `<span>` 库，实现轻量级的非拥有视图容器。
+
+**内容：**
+- 基础创建 - 从 C 数组、vector、array 创建 span
+- span 属性 - size()、size_bytes()、empty()、front()、back()、data()
+- 子视图 - first()、last()、subspan()
+- 迭代器支持 - begin/end、rbegin/rend、范围 for 循环
+- const span - 只读视图，防止数据修改
+- 静态扩展 - 编译时已知大小的 span
+- 函数参数 - 接受多种容器类型的统一接口
+- 算法集成 - 与 STL 算法配合使用
+- 字符串视图 - 字符串的字符级操作
+- 零拷贝操作 - 避免数据拷贝的高效处理
+- 原始指针 - 与 C 风格指针的互操作
+- 性能对比 - 与 vector 引用的性能比较
+
+**运行：**
+```bash
+./build/std-span/std-span
+```
+
+---
+
 ## 手动编译 (不使用 CMake)
 
 如果不想用 CMake，也可以手动编译：

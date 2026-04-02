@@ -37,6 +37,7 @@
 | ranges | C++20 | Ranges 库 |
 | coroutines | C++20 | 协程 (co_await/co_yield) |
 | format | C++20 | std::format 格式化库 |
+| std-span | C++20 | std::span 视图容器 |
 
 ### Go 实验版本要求
 
@@ -75,7 +76,8 @@ studio/
 │   │   ├── concurrency/  # 并发编程
 │   │   ├── ranges/       # Ranges (C++20)
 │   │   ├── coroutines/   # 协程 (C++20)
-│   │   └── format/       # 格式化库 (C++20)
+│   │   ├── format/       # 格式化库 (C++20)
+│   │   └── std-span/     # 视图容器 (C++20)
 │   └── go/               # Go 实验
 │       └── goroutines/   # 并发编程
 ├── experiments/          # 综合实验
@@ -97,7 +99,7 @@ python tools/list_experiments.py
 
 输出示例：
 ```
-已有实验 (15 个):
+已有实验 (18 个):
 
 名称: go-goroutines
 语言: go (1.18+)
@@ -140,6 +142,7 @@ cmake -B build
 cmake --build build
 ./build/concurrency/concurrency   # 并发编程
 ./build/ranges/ranges             # C++20 Ranges
+./build/std-span/std-span         # C++20 std::span
 ```
 
 详见各语言目录下的 `README.md`。
