@@ -35,7 +35,11 @@ studio/
 │   │   ├── lambda/        # Lambda 表达式
 │   │   ├── move-semantics/# 移动语义
 │   │   ├── concurrency/   # 并发编程
-│   │   └── ranges/        # Ranges (C++20)
+│   │   ├── ranges/        # Ranges (C++20)
+│   │   ├── coroutines/    # 协程 (C++20)
+│   │   ├── format/        # std::format (C++20)
+│   │   ├── std-span/      # std::span (C++20)
+│   │   └── std-expected/  # std::expected (C++23)
 │   └── go/                # Go 示例
 │       ├── README.md      # Go 实验总览
 │       └── goroutines/    # 并发编程
@@ -144,6 +148,9 @@ C++ 顶层目录应包含：
 | 并发 | C++11/17 | 线程、原子操作、scoped_lock |
 | Lambda | C++14 | 泛型 Lambda |
 | 新特性 | C++20 | Concepts、Ranges、协程 |
+| 新特性 | C++20 | std::format 格式化库 |
+| 新特性 | C++20 | std::span 视图容器 |
+| 新特性 | C++23 | std::expected 错误处理 |
 
 #### Go 版本标注参考
 
@@ -338,6 +345,9 @@ python tools/new_experiment.py python-async-patterns python
 后续新增：
 - 并发编程
 - Ranges (C++20)
+- std::format (C++20)
+- std::span (C++20)
+- std::expected (C++23)
 
 **2. 创建目录结构**
 ```

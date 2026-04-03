@@ -819,6 +819,71 @@ std::unique_ptr<Resource[]> arr = std::make_unique<Resource[]>(3);
 - `vector<unique_ptr>` 更灵活，可以控制每个元素的初始化
 - 如果确实需要数组智能指针，确保类有默认构造函数
 
+### std::expected 编译错误
+
+**错误信息：**
+```
+error: no member named 'map' in 'std::expected<int, std::string>'
+```
+
+**原因：** C++23 的 `std::expected` 的 monadic 函数（`map`、`and_then`、`map_error`、`and_else`）是 C++26 特性，当前编译器尚未支持。
+
+**解决方案：** 手动实现链式操作
+
+```cpp
+// ❌ 错误：C++26 特性，当前编译器不支持
+auto result = exp.map([](int x) { return x * 2; });
+
+// ✅ 正确：手动实现
+auto doubled = exp ? std::expected<int, std::string>(*exp * 2) : exp;
+
+// ✅ and_then 手动实现
+auto square = [](int x) -> std::expected<int, std::string> {
+    if (x > 100) return std::unexpected("Too large");
+    return x * x;
+};
+auto chained = exp ? square(*exp) : exp;
+
+// ✅ and_else 手动实现（fallback）
+auto withFallback = exp ? exp : std::expected<int, std::string>(0);
+```
+
+### std::expected 使用注意事项
+
+**问题：** 构造 expected 时的错误
+
+**原因：** `std::expected::unexpected` 是静态成员函数，当前编译器可能不支持
+
+**解决方案：**
+
+```cpp
+// ❌ 错误
+auto e = std::expected<T, E>::unexpected("error");
+
+// ✅ 正确
+auto e = std::unexpected(std::string("error"));
+// 或
+auto e = std::expected<T, E>(std::unexpect_t{}, "error");
+```
+
+**模板函数注意事项：**
+
+```cpp
+// ❌ 错误：默认构造错误类型
+template<typename T, typename E>
+std::expected<T, E> safeDivide(T a, T b) {
+    if (b == T{}) return std::unexpected(E{});  // E 可能不支持默认构造
+}
+
+// ✅ 正确：传入错误值
+template<typename T, typename E>
+std::expected<T, E> safeDivide(T a, T b, E zeroError) {
+    if (b == T{}) return std::unexpected(zeroError);
+}
+
+auto r = safeDivide<int, const char*>(10, 0, "Division by zero");
+```
+
 ---
 
 ## 编译和构建

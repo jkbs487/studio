@@ -1,0 +1,11 @@
+{
+  "name": "cpp-std-expected",
+  "description": "探索 C++23 std::expected 与 std::optional 对比：错误处理、链式操作、monadic 函数",
+  "created": "2026-04-03",
+  "language": "cpp",
+  "language_version": "C++23",
+  "tags": ["expected", "optional", "error-handling", "monadic", "c++23", "modern-cpp"],
+  "ai_participation": "full",
+  "ai_model": "claude-3-sonnet",
+  "source": "ai"
+}

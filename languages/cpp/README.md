@@ -251,6 +251,30 @@ cmake --open build
 
 ---
 
+### Expected (std-expected) `C++23`
+
+探索 C++23 引入的 `<expected>` 库，实现类型安全的错误处理。
+
+**内容：**
+- 基础对比 - std::expected vs std::optional
+- 创建方式 - 隐式构造、std::unexpected、工厂函数
+- 错误处理 - 检查成功/失败、获取值或错误
+- 结构化错误 - 自定义错误类型携带更多上下文
+- Monadic 操作 - map、map_error、and_then 链式调用
+- optional vs expected - 何时使用哪个
+- 实际示例 - 文件解析、错误传播
+- value-or 模式 - value_or 和 and_else
+- 与指针结合 - expected<unique_ptr<T>, E>
+- 类型转换 - optional 与 expected 互转
+- 模板函数 - 泛型错误处理
+
+**运行：**
+```bash
+./build/std-expected/std-expected
+```
+
+---
+
 ## 手动编译 (不使用 CMake)
 
 如果不想用 CMake，也可以手动编译：

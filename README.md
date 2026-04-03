@@ -38,6 +38,7 @@
 | coroutines | C++20 | 协程 (co_await/co_yield) |
 | format | C++20 | std::format 格式化库 |
 | std-span | C++20 | std::span 视图容器 |
+| std-expected | C++23 | std::expected 错误处理容器 |
 
 ### Go 实验版本要求
 
@@ -77,7 +78,8 @@ studio/
 │   │   ├── ranges/       # Ranges (C++20)
 │   │   ├── coroutines/   # 协程 (C++20)
 │   │   ├── format/       # 格式化库 (C++20)
-│   │   └── std-span/     # 视图容器 (C++20)
+│   │   ├── std-span/     # 视图容器 (C++20)
+│   │   └── std-expected/ # 错误处理 (C++23)
 │   └── go/               # Go 实验
 │       └── goroutines/   # 并发编程
 ├── experiments/          # 综合实验
@@ -143,6 +145,7 @@ cmake --build build
 ./build/concurrency/concurrency   # 并发编程
 ./build/ranges/ranges             # C++20 Ranges
 ./build/std-span/std-span         # C++20 std::span
+./build/std-expected/std-expected # C++23 std::expected
 ```
 
 详见各语言目录下的 `README.md`。
