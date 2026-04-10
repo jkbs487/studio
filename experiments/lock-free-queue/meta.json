@@ -1,0 +1,11 @@
+{
+  "name": "lock-free-queue",
+  "description": "探索无锁队列的实现：原子操作、CAS、内存模型、Michael-Scott 算法、ABA 问题",
+  "created": "2026-04-08",
+  "language": "cpp",
+  "language_version": "C++20",
+  "tags": ["concurrency", "lock-free", "queue", "atomic", "performance"],
+  "ai_participation": "partial",
+  "ai_model": "claude-3-sonnet",
+  "source": "human"
+}

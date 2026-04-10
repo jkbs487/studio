@@ -39,6 +39,7 @@
 | format | C++20 | std::format 格式化库 |
 | std-span | C++20 | std::span 视图容器 |
 | std-expected | C++23 | std::expected 错误处理容器 |
+| lock-free-queue | C++20 | 无锁队列、原子操作、Tagged Pointer |
 
 ### Go 实验版本要求
 
@@ -83,7 +84,8 @@ studio/
 │   └── go/               # Go 实验
 │       └── goroutines/   # 并发编程
 ├── experiments/          # 综合实验
-│   └── benchmark/        # 性能对比实验
+│   ├── benchmark/        # 性能对比实验
+│   └── lock-free-queue/  # 无锁队列实验
 ├── tools/                # 辅助工具脚本
 │   └── list_experiments.py # 列出所有实验
 └── notes/                # 研究笔记
