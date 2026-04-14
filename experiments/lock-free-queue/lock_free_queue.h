@@ -81,13 +81,15 @@ private:
 
 // ============================================================================
 // Lock-Free Queue - Michael-Scott Queue
+// 正确实现需要 Hazard Pointer，为简化演示使用延迟删除策略
 // ============================================================================
 template<typename T>
 struct LockFreeQueueNode {
     T data;
     std::atomic<LockFreeQueueNode*> next;
+    bool retired;  // 标记是否已废弃（用于延迟删除）
 
-    explicit LockFreeQueueNode(T val) : data(std::move(val)), next(nullptr) {}
+    explicit LockFreeQueueNode(T val) : data(std::move(val)), next(nullptr), retired(false) {}
 };
 
 template<typename T>
@@ -96,6 +98,7 @@ public:
     LockFreeQueue() {
         auto* dummy = new LockFreeQueueNode<T>(T{});
         dummy->next.store(nullptr, std::memory_order_seq_cst);
+        // 使用 tagged pointer: 高 16 位 tag，低 48 位指针
         head.store(reinterpret_cast<uintptr_t>(dummy), std::memory_order_seq_cst);
         tail.store(reinterpret_cast<uintptr_t>(dummy), std::memory_order_seq_cst);
     }
@@ -107,24 +110,27 @@ public:
         while (true) {
             uintptr_t curTail = tail.load(std::memory_order_seq_cst);
             LockFreeQueueNode<T>* tailPtr = reinterpret_cast<LockFreeQueueNode<T>*>(curTail & 0xFFFFFFFFFFFF);
+            uint64_t tailTag = curTail >> 48;
 
-            // 读取 tail->next
             LockFreeQueueNode<T>* next = tailPtr->next.load(std::memory_order_seq_cst);
 
             if (next != nullptr) {
-                // tail 落后，帮它前进
-                tail.store(reinterpret_cast<uintptr_t>(next), std::memory_order_seq_cst);
+                // tail 落后，帮它前进，保留 tag
+                uintptr_t newTail = reinterpret_cast<uintptr_t>(next) | (tailTag << 48);
+                tail.store(newTail, std::memory_order_seq_cst);
                 continue;
             }
 
-            // 尝试 CAS - 使用 strong 版本避免伪失败
+            // 尝试 CAS
             LockFreeQueueNode<T>* expected = nullptr;
             if (tailPtr->next.compare_exchange_strong(expected, newNode,
                     std::memory_order_seq_cst, std::memory_order_seq_cst)) {
-                tail.store(reinterpret_cast<uintptr_t>(newNode), std::memory_order_seq_cst);
+                // CAS 成功，更新 tail（保留 tag）
+                uintptr_t newTail = reinterpret_cast<uintptr_t>(newNode) | ((tailTag + 1) << 48);
+                tail.store(newTail, std::memory_order_seq_cst);
                 return;
             }
-            // CAS 失败another thread succeeded，重试
+            // CAS 失败，重试
         }
     }
 
@@ -140,13 +146,16 @@ public:
                 return std::nullopt;
             }
 
+            // 尝试 CAS head
             uintptr_t newHead = reinterpret_cast<uintptr_t>(next) | ((oldTag + 1) << 48);
             if (head.compare_exchange_weak(oldHead, newHead,
                     std::memory_order_seq_cst, std::memory_order_seq_cst)) {
+                // CAS 成功，获取值并标记旧节点为废弃
                 T value = std::move(next->data);
-                delete headPtr;
+                headPtr->retired = true;  // 标记为废弃，不立即删除
                 return value;
             }
+            // CAS 失败，重试
         }
     }
 
@@ -157,6 +166,7 @@ public:
     }
 
     ~LockFreeQueue() {
+        // 清理时需要小心，避免 use-after-free
         while (true) {
             uintptr_t h = head.load(std::memory_order_seq_cst);
             LockFreeQueueNode<T>* headPtr = reinterpret_cast<LockFreeQueueNode<T>*>(h & 0xFFFFFFFFFFFF);
@@ -167,10 +177,13 @@ public:
                 break;
             }
 
+            // 尝试移动 head
             uintptr_t newHead = reinterpret_cast<uintptr_t>(next);
             if (head.compare_exchange_weak(h, newHead,
                     std::memory_order_seq_cst, std::memory_order_seq_cst)) {
                 delete headPtr;
+            } else {
+                // 如果 CAS 失败，重新读取
             }
         }
     }
