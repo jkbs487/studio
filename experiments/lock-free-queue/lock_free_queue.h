@@ -80,16 +80,17 @@ private:
 };
 
 // ============================================================================
-// Lock-Free Queue - Michael-Scott Queue
-// 正确实现需要 Hazard Pointer，为简化演示使用延迟删除策略
+// Lock-Free Queue - Michael-Scott Queue  
+// 使用 tagged pointer 解决 ABA 问题
+// 注意：本实现不主动删除退役节点（避免 use-after-free）
+// 生产环境应使用完整 Hazard Pointer 或 GC
 // ============================================================================
 template<typename T>
 struct LockFreeQueueNode {
     T data;
     std::atomic<LockFreeQueueNode*> next;
-    bool retired;  // 标记是否已废弃（用于延迟删除）
 
-    explicit LockFreeQueueNode(T val) : data(std::move(val)), next(nullptr), retired(false) {}
+    explicit LockFreeQueueNode(T val) : data(std::move(val)), next(nullptr) {}
 };
 
 template<typename T>
@@ -150,9 +151,8 @@ public:
             uintptr_t newHead = reinterpret_cast<uintptr_t>(next) | ((oldTag + 1) << 48);
             if (head.compare_exchange_weak(oldHead, newHead,
                     std::memory_order_seq_cst, std::memory_order_seq_cst)) {
-                // CAS 成功，获取值并标记旧节点为废弃
+                // CAS 成功，获取值（不立即删除，避免 use-after-free）
                 T value = std::move(next->data);
-                headPtr->retired = true;  // 标记为废弃，不立即删除
                 return value;
             }
             // CAS 失败，重试
@@ -166,26 +166,9 @@ public:
     }
 
     ~LockFreeQueue() {
-        // 清理时需要小心，避免 use-after-free
-        while (true) {
-            uintptr_t h = head.load(std::memory_order_seq_cst);
-            LockFreeQueueNode<T>* headPtr = reinterpret_cast<LockFreeQueueNode<T>*>(h & 0xFFFFFFFFFFFF);
-            LockFreeQueueNode<T>* next = headPtr->next.load(std::memory_order_seq_cst);
-
-            if (next == nullptr) {
-                delete headPtr;
-                break;
-            }
-
-            // 尝试移动 head
-            uintptr_t newHead = reinterpret_cast<uintptr_t>(next);
-            if (head.compare_exchange_weak(h, newHead,
-                    std::memory_order_seq_cst, std::memory_order_seq_cst)) {
-                delete headPtr;
-            } else {
-                // 如果 CAS 失败，重新读取
-            }
-        }
+        // 不在析构时删除遗留节点（避免复杂的并发清理）
+        // 所有节点会在进程结束时由系统回收
+        // 生产环境应使用 Hazard Pointer 实现完整清理
     }
 
 private:
