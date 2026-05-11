@@ -1,11 +1,11 @@
 # Dependencies
 node_modules/
-!site/scripts/*.js
 
 # Build outputs
 dist/
 build/
 *.js
+!site/scripts/*.js
 *.js.map
 *.d.ts
 
