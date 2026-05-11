@@ -1,0 +1,60 @@
+{
+  "/experiments/": [
+    {
+      "text": "全部实验",
+      "link": "/experiments/"
+    },
+    {
+      "text": "标签",
+      "link": "/experiments/tags"
+    },
+    {
+      "text": "按语言",
+      "items": [
+        {
+          "text": "CPP (11)",
+          "link": "/languages/cpp"
+        },
+        {
+          "text": "GO (1)",
+          "link": "/languages/go"
+        },
+        {
+          "text": "MULTI (1)",
+          "link": "/languages/multi"
+        },
+        {
+          "text": "PYTHON (8)",
+          "link": "/languages/python"
+        }
+      ]
+    }
+  ],
+  "/languages/": [
+    {
+      "text": "全部实验",
+      "link": "/experiments/"
+    },
+    {
+      "text": "按语言",
+      "items": [
+        {
+          "text": "CPP (11)",
+          "link": "/languages/cpp"
+        },
+        {
+          "text": "GO (1)",
+          "link": "/languages/go"
+        },
+        {
+          "text": "MULTI (1)",
+          "link": "/languages/multi"
+        },
+        {
+          "text": "PYTHON (8)",
+          "link": "/languages/python"
+        }
+      ]
+    }
+  ]
+}

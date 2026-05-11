@@ -6,7 +6,10 @@
   "scripts": {
     "new": "python tools/new_experiment.py",
     "evaluate": "python tools/evaluate_code.py",
-    "sync": "python tools/sync_meta.py"
+    "sync": "python tools/sync_meta.py",
+    "site:dev": "cd site && npm run docs:dev",
+    "site:build": "cd site && node scripts/scan-experiments.js && npm run docs:build",
+    "site:preview": "cd site && npm run docs:preview"
   },
   "keywords": [
     "ai-native",
