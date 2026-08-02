@@ -42,3 +42,11 @@ temp/
 # Auto-generated site content
 site/experiments/*.md
 site/languages/*.md
+
+# Python
+__pycache__/
+
+# C++ build artifacts
+main
+*.o
+*.out
